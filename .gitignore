@@ -1,3 +1,12 @@
+# Auth files
+.token-oauth
+
+# try code
+tryout_code.py
+
+# IDE
+.vscode/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -21,7 +30,8 @@ sdist/
 var/
 wheels/
 pip-wheel-metadata/
-share/python-wheels/
+share/
+Scripts/
 *.egg-info/
 .installed.cfg
 *.egg
@@ -75,6 +85,7 @@ docs/_build/
 target/
 
 # Jupyter Notebook
+*.ipynb
 .ipynb_checkpoints
 
 # IPython
@@ -104,6 +115,7 @@ celerybeat.pid
 # Environments
 .env
 .venv
+pyvenv.cfg
 env/
 venv/
 ENV/
