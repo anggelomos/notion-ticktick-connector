@@ -1,84 +1,91 @@
-import requests
-from requests.api import delete
+import logging
+from typing import List
 
-from constants.task_data import TaskData
+import requests
+from data.payloads.notion_payloads import NotionPayloads
+from data.task_data import TaskData as td, TaskData
+from utilities.task_utilities import TaskUtilities
 
 
 class NotionController:
     
-    pages_url = "https://api.notion.com/v1/pages/"
+    base_url = "https://api.notion.com/v1"
 
-    def __init__(self, auth_secret:str, notion_version:str, object_id:str):
+    def __init__(self, auth_secret: str, notion_version: str, object_id: str):
         self._auth_secret = auth_secret
         self._notion_version = notion_version
         self.object_id = object_id
+        self.active_tasks = []
+        self.get_active_tasks()
 
-    def _get_headers(self) -> dict:
-        headers = {'content-type': 'application/json',
-            'Notion-Version': f'{self._notion_version}', 
-            'Authorization': f'Bearer {self._auth_secret}'}
+    def get_active_tasks(self) -> List[dict]:
+        logging.info("Getting notion active tasks")
+        payload = NotionPayloads.get_active_tasks()
+        response = requests.post(url=self.base_url+"/databases/"+self.object_id+"/query",
+                                 data=payload,
+                                 headers=NotionPayloads.get_headers(self._notion_version, self._auth_secret))
 
-        return headers
+        raw_tasks = response.json()["results"]
+        notion_tasks = TaskUtilities.parse_notion_tasks(raw_tasks)
+        notion_tasks.sort(key=lambda task: task[TaskData.TITLE])
 
-    def _get_create_payload(self, title:str, points:int, done:bool, due_date:str) -> str:
-        payload = """{{
-                        "parent": {{ "database_id": "{0}" }},
-                        "properties": 
-                            {{
-                                "title": {{"title": [{{"text": {{"content": "{1}"}}}}]}},
-                                "Points": {{"number": {2}}},
-                                "Done": {{"checkbox": {3}}},
-                                "Due date": 
-                                    {{"date": {{
-                                        "start": "{4}",
-                                        "end": null}}
-                                    }}
-                            }}
-                    }}"""
-        return payload.format(self.object_id, title, points, str(done).lower(), due_date)
+        self.active_tasks = notion_tasks
+        return notion_tasks
 
-    def _get_update_payload(self, title:str, points:int, done:bool, due_date:str, delete:bool=False) -> str:
-        payload = """{{
-                        "properties": 
-                            {{
-                                "title": {{"title": [{{"text": {{"content": "{1}"}}}}]}},
-                                "Points": {{"number": {2}}},
-                                "Done": {{"checkbox": {3}}},
-                                "Due date": 
-                                    {{"date": {{
-                                        "start": "{4}",
-                                        "end": null}}
-                                    }}
-                            }},
-                        "archived": {5}
-                    }}"""
-        return payload.format(self.object_id, title, points, str(done).lower(), due_date, str(delete).lower())
+    def get_notion_id(self, ticktick_id: str) -> str:
+        notion_id = list(filter(lambda task: task[td.TICKTICK_ID] == ticktick_id, self.active_tasks))[0][td.NOTION_ID]
+        logging.info(f"Got notion id {notion_id} from ticktick id {ticktick_id}")
+        return notion_id
 
-    def create_task(self, task:tuple) -> str:
-        task_data = task[1]
-        payload = self._get_update_payload(task_data[TaskData.TITLE.value],
-                                           task_data[TaskData.POINTS.value],
-                                           task_data[TaskData.DONE.value],
-                                           task_data[TaskData.DUE_DATE.value])
+    def create_task(self, task: dict) -> dict:
+        logging.info(f"Creating task {task}")
+        payload = NotionPayloads.create_task(self.object_id,
+                                             task[TaskData.TITLE],
+                                             task[TaskData.POINTS],
+                                             task[TaskData.ENERGY],
+                                             task[TaskData.TAGS],
+                                             task[TaskData.DUE_DATE],
+                                             task[TaskData.TICKTICK_ID])
 
-        response = requests.post(url=self.pages_url, data=payload, headers=self._get_headers())
-        return response.json()["id"]
+        response = requests.post(url=self.base_url+"/pages",
+                                 data=payload,
+                                 headers=NotionPayloads.get_headers(self._notion_version, self._auth_secret))
+        return response.json()
     
-    def update_task(self, page_id, task:tuple):
-        task_data = task[1]
-        payload = self._get_update_payload(task_data[TaskData.TITLE.value],
-                                           task_data[TaskData.POINTS.value],
-                                           task_data[TaskData.DONE.value],
-                                           task_data[TaskData.DUE_DATE.value])
+    def update_task(self, page_id: str, task: dict):
+        logging.info(f"Updating task {page_id} with info {task}")
+        payload = NotionPayloads.update_task(task[TaskData.TITLE],
+                                             task[TaskData.POINTS],
+                                             task[TaskData.ENERGY],
+                                             task[TaskData.DONE],
+                                             task[TaskData.TAGS],
+                                             task[TaskData.DUE_DATE],
+                                             task[TaskData.TICKTICK_ID])
 
-        requests.patch(url=self.pages_url+page_id, data=payload, headers=self._get_headers())
+        requests.patch(url=self.base_url+"/pages/"+page_id,
+                       data=payload,
+                       headers=NotionPayloads.get_headers(self._notion_version, self._auth_secret))
 
-    def delete_task(self, page_id, task:tuple):
-        task_data = task[1]
-        payload = self._get_update_payload(task_data[TaskData.TITLE.value],
-                                           task_data[TaskData.POINTS.value],
-                                           task_data[TaskData.DONE.value],
-                                           task_data[TaskData.DUE_DATE.value],
-                                           delete=True)
+    def complete_task(self, page_id: str):
+        logging.info(f"Marking task {page_id} as completed")
+        payload = NotionPayloads.complete_task()
 
-        requests.patch(url=self.pages_url+page_id, data=payload, headers=self._get_headers())
+        requests.patch(url=self.base_url+"/pages/"+page_id,
+                       data=payload,
+                       headers=NotionPayloads.get_headers(self._notion_version, self._auth_secret))
+
+    def delete_task(self, page_id: str):
+        logging.info(f"Deleting task {page_id}")
+        payload = NotionPayloads.delete_task()
+
+        requests.patch(url=self.base_url+"/pages/"+page_id,
+                       data=payload,
+                       headers=NotionPayloads.get_headers(self._notion_version, self._auth_secret))
+
+    def change_task_state(self, page_id: str, active: bool):
+        logging.info(f"Changing task {page_id} state to {active}")
+        payload = NotionPayloads.change_task_state(active)
+
+        requests.patch(url=self.base_url+"/pages/"+page_id,
+                       data=payload,
+                       headers=NotionPayloads.get_headers(self._notion_version, self._auth_secret))

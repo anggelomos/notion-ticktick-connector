@@ -2,10 +2,11 @@
 .token-oauth
 
 # try code
-tryout_code.py
+scratch.py
 
 # IDE
 .vscode/
+.idea/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
