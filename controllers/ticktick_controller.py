@@ -4,9 +4,7 @@ from typing import List, Union
 from controllers.notion_controller import NotionController
 from data.task_ticktick_parameters import TaskTicktickParameters as ttd, TaskTicktickParameters
 from controllers.ticktick_api import TicktickAPI
-from ticktick.oauth2 import OAuth2
 from data.task_data import TaskData as td, TaskData
-from data.task_status import TaskStatus
 from utilities.task_utilities import TaskUtilities
 
 
@@ -20,11 +18,7 @@ class TicktickController:
     abandoned_tasks_url = BASE_URL + "/project/all/closed?from=&to=&status=Abandoned"
     deleted_tasks_url = BASE_URL + "/project/all/trash/pagination?start=0&limit=50"
 
-    def __init__(self, client_id:str, client_secret:str, uri:str, username:str, password:str):
-        _auth_client = OAuth2(client_id=client_id,
-                              client_secret=client_secret,
-                              redirect_uri=uri)
-
+    def __init__(self, client_id: str, client_secret: str, uri: str, username: str, password: str):
         self.state = {}
         self.inbox_id = None
         self.project_folders = []
