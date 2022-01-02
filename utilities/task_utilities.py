@@ -41,16 +41,36 @@ class TaskUtilities:
             task[TaskData.POINTS] = properties[tnp.POINTS][tnp.NUMBER]
             task[TaskData.ENERGY] = properties[tnp.ENERGY][tnp.NUMBER]
             task[TaskData.DUE_DATE] = properties[tnp.DUE_DATE][tnp.DATE][tnp.START]
+
             try:
                 task[TaskData.TAGS] = list(map(lambda tag: tag[tnp.NAME], properties[tnp.TAGS][tnp.MULTI_SELECT]))
             except KeyError:
                 task[TaskData.TAGS] = []
+
+            try:
+                task[TaskData.STATUS] = properties[tnp.STATUS][tnp.SELECT][tnp.NAME]
+            except (KeyError, TypeError):
+                task[TaskData.STATUS] = ""
 
             notion_tasks.append(task)
         return notion_tasks
 
     @classmethod
     def parse_ticktick_tasks(cls, raw_tasks: List[dict]) -> List[dict]:
+
+        column_tags = {
+            "61c62f26824afc6c763523ec": "to-do",
+            "61c62f34824afc6c763523fb": "analyze",
+            "61c62f41824afc6c76352403": "in-progress",
+            "61c62f48824afc6c76352411": "review",
+            "61c62f4d824afc6c76352419": "done",
+            "2afe1c885d4e4164bacc22d582ba50b8": "to-do",
+            "36725d09fd3b46569f1e8dbbd2e4c1f3": "analyze",
+            "fdd54b4fc75c435190a9e87617dd6bab": "in-progress",
+            "b19e1b221573467baef4378e2dbf0571": "review",
+            "e09901cc2b2d4fad99bccfbf539189f8": "done"
+        }
+
         ticktick_tasks = []
         for raw_task in raw_tasks:
             task = {}
@@ -61,10 +81,16 @@ class TaskUtilities:
             task[TaskData.POINTS] = cls.get_task_points(raw_task)
             task[TaskData.ENERGY] = cls.get_task_energy(raw_task)
             task[TaskData.DUE_DATE] = cls.get_task_date(raw_task)
+
             try:
                 task[TaskData.TAGS] = raw_task[ttp.TAGS]
             except KeyError:
                 task[TaskData.TAGS] = []
+
+            try:
+                task[TaskData.STATUS] = column_tags[raw_task[ttp.COLUMN_ID]]
+            except KeyError:
+                task[TaskData.STATUS] = ""
 
             ticktick_tasks.append(task)
         return ticktick_tasks

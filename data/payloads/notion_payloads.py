@@ -33,7 +33,7 @@ class NotionPayloads:
         return json.dumps(payload)
 
     @staticmethod
-    def create_task(object_id, title: str, points: int, energy: int, tags: List[str], due_date: str, ticktick_id: str) -> str:
+    def create_task(object_id, title: str, points: int, energy: int, tags: List[str], due_date: str, ticktick_id: str, status: str) -> str:
         payload = {
                     "parent": {"database_id": object_id},
                     "properties": {
@@ -53,11 +53,13 @@ class NotionPayloads:
                                 tnp.TICKTICK_ID: {"rich_text": [{"text": {"content": ticktick_id}}]}
                             }
                     }
+        if status:
+            payload["properties"][tnp.STATUS] = {"select": {"name": status}}
 
         return json.dumps(payload)
 
     @staticmethod
-    def update_task(title: str, points: int, energy: int, done: bool, tags: List[str], due_date: str, ticktick_id: str) -> str:
+    def update_task(title: str, points: int, energy: int, done: bool, tags: List[str], due_date: str, ticktick_id: str, status: str) -> str:
         payload = {
                     "properties": {
                                 tnp.TITLE: {"title": [{"text": {"content": title}}]},
@@ -77,6 +79,9 @@ class NotionPayloads:
                             },
                     "archived": False
                     }
+
+        if status:
+            payload["properties"][tnp.STATUS] = {"select": {"name": status}}
 
         return json.dumps(payload)
 

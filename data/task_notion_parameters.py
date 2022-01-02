@@ -13,6 +13,7 @@ class TaskNotionParameters:
     ENERGY = "Energy"
     TASK = "Task"
     TAGS = "Tags"
+    STATUS = "Status"
 
     # Data types
     TITLE = "title"
@@ -23,4 +24,5 @@ class TaskNotionParameters:
     DATE = "date"
     START = "start"
     MULTI_SELECT = "multi_select"
+    SELECT = "select"
     NAME = "name"

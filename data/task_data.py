@@ -11,3 +11,4 @@ class TaskData(Enum):
     ENERGY = "energy"
     DUE_DATE = "due_date"
     TAGS = "tags"
+    STATUS = "status"

@@ -45,7 +45,8 @@ class NotionController:
                                              task[TaskData.ENERGY],
                                              task[TaskData.TAGS],
                                              task[TaskData.DUE_DATE],
-                                             task[TaskData.TICKTICK_ID])
+                                             task[TaskData.TICKTICK_ID],
+                                             task[TaskData.STATUS])
 
         response = requests.post(url=self.base_url+"/pages",
                                  data=payload,
@@ -60,7 +61,8 @@ class NotionController:
                                              task[TaskData.DONE],
                                              task[TaskData.TAGS],
                                              task[TaskData.DUE_DATE],
-                                             task[TaskData.TICKTICK_ID])
+                                             task[TaskData.TICKTICK_ID],
+                                             task[TaskData.STATUS])
 
         requests.patch(url=self.base_url+"/pages/"+page_id,
                        data=payload,
