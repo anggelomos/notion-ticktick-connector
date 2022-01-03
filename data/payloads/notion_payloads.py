@@ -89,9 +89,8 @@ class NotionPayloads:
     def complete_task() -> str:
         payload = {
                     "properties": {
-                        tnp.DONE: {
-                            "checkbox": True
-                        }
+                        tnp.DONE: {"checkbox": True},
+                        tnp.STATUS: {"select": {"name": "done"}}
                     }
                 }
 
