@@ -40,6 +40,7 @@ class TaskUtilities:
             task[TaskData.TITLE] = properties[tnp.TASK][tnp.TITLE][0][tnp.PLAIN_TEXT]
             task[TaskData.POINTS] = properties[tnp.POINTS][tnp.NUMBER]
             task[TaskData.ENERGY] = properties[tnp.ENERGY][tnp.NUMBER]
+            task[TaskData.FOCUS_TIME] = properties[tnp.FOCUS_TIME][tnp.NUMBER]
             task[TaskData.DUE_DATE] = properties[tnp.DUE_DATE][tnp.DATE][tnp.START]
 
             try:
@@ -81,6 +82,7 @@ class TaskUtilities:
             task[TaskData.POINTS] = cls.get_task_points(raw_task)
             task[TaskData.ENERGY] = cls.get_task_energy(raw_task)
             task[TaskData.DUE_DATE] = cls.get_task_date(raw_task)
+            task[TaskData.FOCUS_TIME] = cls.get_task_focus_time(raw_task)
 
             try:
                 task[TaskData.TAGS] = raw_task[ttp.TAGS]
@@ -121,6 +123,13 @@ class TaskUtilities:
             return re.search(RegexPatterns.GET_TASK_DATE, task[ttp.START_DATE]).group(1)
         except KeyError:
             return ""
+
+    @staticmethod
+    def get_task_focus_time(task: dict) -> float:
+        try:
+            return round(sum(map(lambda summary: summary[ttp.POMO_DURATION] + summary[ttp.STOPWATCH_DURATION], task[ttp.FOCUS_SUMMARIES])) / 3600, 2)
+        except KeyError:
+            return 0
 
     @classmethod
     def is_task_valid(cls, task: dict) -> bool:

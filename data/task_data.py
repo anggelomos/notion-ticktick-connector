@@ -12,3 +12,4 @@ class TaskData(Enum):
     DUE_DATE = "due_date"
     TAGS = "tags"
     STATUS = "status"
+    FOCUS_TIME = "focus_time"

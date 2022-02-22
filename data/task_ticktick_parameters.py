@@ -34,5 +34,7 @@ class TaskTicktickParameters:
     REPEAT_FROM = "repeatFrom"
     POMODORO_SUMMARIES = "pomodoroSummaries"
     FOCUS_SUMMARIES = "focusSummaries"
+    POMO_DURATION = "pomoDuration"
+    STOPWATCH_DURATION = "stopwatchDuration"
     COLUMN_ID = "columnId"
     KIND = "kind"

@@ -1,20 +1,14 @@
 
 
-class TaskNotionParameters:
+class HabitNotionParameters:
 
     # Properties
     ID = "id"
     PROPERTIES = "properties"
-    TICKTICK_ID = "Ticktick Id"
-    POINTS = "Points"
-    DONE = "Done"
-    DUE_DATE = "Due date"
-    ACTIVE = "Hard Active"
-    ENERGY = "Energy"
-    TASK = "Task"
-    TAGS = "Tags"
-    STATUS = "Status"
-    FOCUS_TIME = "Focus time"
+    EMOJI = "Emoji"
+    WEEK_NUMBER = "week #"
+    YEAR = "year"
+    HABIT = "habit"
 
     # Data types
     TITLE = "title"

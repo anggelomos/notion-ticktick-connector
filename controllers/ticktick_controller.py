@@ -2,7 +2,7 @@ import logging
 from typing import List, Union
 
 from controllers.notion_controller import NotionController
-from data.task_ticktick_parameters import TaskTicktickParameters as ttd, TaskTicktickParameters
+from data.task_ticktick_parameters import TaskTicktickParameters as ttp, TaskTicktickParameters
 from controllers.ticktick_api import TicktickAPI
 from data.task_data import TaskData as td, TaskData
 from utilities.task_utilities import TaskUtilities
@@ -62,11 +62,12 @@ class TicktickController:
             "life_kanban": "61c62f198f08c92d0584f678",
             "work_tasks": "61c62ff88f08c92d058504d5",
             "work_reminders": "5f71cb1e22d45e44fa87113a",
+            "habits": "617f4bd08f08c83aa52559e0",
         }
 
         relevant_tasks = []
         for project_id in project_ids.values():
-            relevant_tasks += self.filter_tasks(ttd.PROJECT_ID, project_id)
+            relevant_tasks += self.filter_tasks(ttp.PROJECT_ID, project_id)
 
         relevant_tasks = list(filter(TaskUtilities.is_task_valid, relevant_tasks))
         relevant_tasks = TaskUtilities.parse_ticktick_tasks(relevant_tasks)
@@ -85,12 +86,13 @@ class TicktickController:
     def was_task_completed(self, task: dict) -> bool:
         logging.info(f"Checking if task was completed {task}")
         def condition(completed_task):
-            return task[td.TICKTICK_ID] == completed_task[ttd.ID] and task[td.DUE_DATE] in completed_task[ttd.START_DATE]
+            return task[td.TICKTICK_ID] == completed_task[ttp.ID] and task[td.DUE_DATE] in completed_task[ttp.START_DATE]
 
         return any(map(condition, self.completed_tasks))
 
     def was_task_updated(self, task: dict, notion_tasks: List[dict]) -> bool:
         logging.info(f"Checking if task was updated {task}")
+
         def condition(notion_task):
             if task[TaskData.TICKTICK_ID] == notion_task[TaskData.TICKTICK_ID]:
                 tasks_equal = True
@@ -116,15 +118,16 @@ class TicktickController:
         logging.info(f"Checking if task was deleted {task}")
 
         def condition_deleted(deleted_task):
-            return task[td.TICKTICK_ID] == deleted_task[ttd.ID] and task[td.DUE_DATE] in deleted_task[ttd.START_DATE]
+            return task[td.TICKTICK_ID] == deleted_task[ttp.ID] and task[td.DUE_DATE] in deleted_task[ttp.START_DATE]
 
         def condition_abandoned(abandoned_task):
-            return task[td.TICKTICK_ID] == abandoned_task[ttd.ID] and task[td.DUE_DATE] in abandoned_task[ttd.START_DATE]
+            return task[td.TICKTICK_ID] == abandoned_task[ttp.ID] and task[td.DUE_DATE] in abandoned_task[ttp.START_DATE]
 
         was_task_deleted = any(map(condition_deleted, self.deleted_tasks))
         was_task_abandoned = any(map(condition_abandoned, self.abandoned_tasks))
+        is_reading_habit = set(task[td.TAGS]) == {"read", "habit"}
 
-        return was_task_deleted or was_task_abandoned
+        return was_task_deleted or was_task_abandoned and not is_reading_habit
 
     def complete_tasks(self, notion: NotionController):
         logging.info(f"Completing tasks")
@@ -164,3 +167,16 @@ class TicktickController:
                 notion.create_task(task)
 
                 self.relevant_tasks.remove(task)
+
+    def get_checked_habits(self) -> List[dict]:
+
+        def habits_filter(task):
+            try:
+                return "habit" in task[ttp.TAGS] and len(task[ttp.TAGS]) >= 2
+            except KeyError:
+                return False
+
+        raw_checked_habits = list(filter(habits_filter, self.completed_tasks))
+        checked_habits = TaskUtilities.parse_ticktick_tasks(raw_checked_habits)
+
+        return checked_habits
