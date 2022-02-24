@@ -30,21 +30,20 @@ class TicktickController:
         self.completed_tasks = []
         self.deleted_tasks = []
         self.abandoned_tasks = []
-        self.sync()
 
-    def sync(self):
+    def sync_tasks(self, notion_controller: NotionController):
         logging.info(f"Syncing ticktick tasks")
         response = self.ticktick_client.get(self.get_state, token_required=True)
+        self.completed_tasks = self.ticktick_client.get(self.completed_tasks_url, token_required=True)
+        self.deleted_tasks = self.ticktick_client.get(self.deleted_tasks_url, token_required=True)["tasks"]
+        self.abandoned_tasks = self.ticktick_client.get(self.abandoned_tasks_url, token_required=True)
 
         self.inbox_id = response['inboxId']
         self.project_folders = response['projectGroups']
         self.projects = response['projectProfiles']
-        self.tasks = response['syncTaskBean']['update']
+        self.tasks = response['syncTaskBean']['update'] + self.completed_tasks
         self.tags = response['tags']
         self.get_relevant_tasks()
-        self.completed_tasks = self.ticktick_client.get(self.completed_tasks_url, token_required=True)
-        self.deleted_tasks = self.ticktick_client.get(self.deleted_tasks_url, token_required=True)["tasks"]
-        self.abandoned_tasks = self.ticktick_client.get(self.abandoned_tasks_url, token_required=True)
 
     def filter_tasks(self, parameter: TaskTicktickParameters, value: Union[str, int, bool]) -> List[dict]:
         logging.info(f"Getting filtered tasks {parameter}: {value}")
@@ -78,6 +77,7 @@ class TicktickController:
 
     def is_task_new(self, task: dict, notion_tasks) -> bool:
         logging.info(f"Checking if task was new {task}")
+
         def condition(notion_task):
             return task[TaskData.TICKTICK_ID] == notion_task[TaskData.TICKTICK_ID]
 
@@ -85,8 +85,12 @@ class TicktickController:
 
     def was_task_completed(self, task: dict) -> bool:
         logging.info(f"Checking if task was completed {task}")
+
         def condition(completed_task):
-            return task[td.TICKTICK_ID] == completed_task[ttp.ID] and task[td.DUE_DATE] in completed_task[ttp.START_DATE]
+            try:
+                return task[td.TICKTICK_ID] == completed_task[ttp.ID] and task[td.DUE_DATE] in completed_task[ttp.START_DATE]
+            except KeyError:
+                return False
 
         return any(map(condition, self.completed_tasks))
 

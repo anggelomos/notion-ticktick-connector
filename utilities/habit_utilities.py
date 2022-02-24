@@ -18,7 +18,6 @@ class HabitUtilities:
 
     @classmethod
     def parse_habit_task(cls, habit: dict) -> tuple:
-        raw_habit = habit.copy()
-        raw_habit[TaskData.TAGS].remove(HabitList.HABIT.value)
+        clean_habit_tags = list(filter(lambda tag: tag != HabitList.HABIT.value, habit[TaskData.TAGS]))
 
-        return raw_habit[TaskData.TAGS][0], raw_habit[TaskData.DUE_DATE]
+        return clean_habit_tags[0], habit[TaskData.DUE_DATE]

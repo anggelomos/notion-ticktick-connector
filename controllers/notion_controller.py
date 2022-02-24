@@ -81,7 +81,7 @@ class NotionController:
 
         self.notion_client.update_table_entry(page_id, payload)
 
-    def sync_habits(self, checked_habits: List[dict]):
+    def check_habits(self, checked_habits: List[dict]):
         processed_habits = list(map(HabitUtilities.parse_habit_task, checked_habits))
 
         for habit, date in processed_habits:

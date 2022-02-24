@@ -13,8 +13,11 @@ ticktick = TicktickController(os.getenv('TT_client_id'),
                               os.getenv('TT_user'),
                               os.getenv('TT_pass'))
 
+notion.get_active_tasks()
+ticktick.sync_tasks(notion)
+
 checked_habits = ticktick.get_checked_habits()
-notion.sync_habits(checked_habits)
+notion.check_habits(checked_habits)
 if not TaskUtilities.are_tasks_synced(notion.active_tasks, ticktick.relevant_tasks):
     ticktick.complete_tasks(notion)
     ticktick.delete_tasks(notion)
