@@ -33,6 +33,7 @@ wheels/
 pip-wheel-metadata/
 share/
 Scripts/
+Include/
 *.egg-info/
 .installed.cfg
 *.egg
