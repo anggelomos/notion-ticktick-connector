@@ -17,7 +17,6 @@ class NotionController:
     def __init__(self, auth_secret: str, notion_version: str):
         self.notion_client = NotionAPI(auth_secret, notion_version)
         self.active_tasks = []
-        self.get_active_tasks()
 
     def get_active_tasks(self) -> List[dict]:
         logging.info("Getting notion active tasks")
