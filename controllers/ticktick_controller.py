@@ -31,7 +31,7 @@ class TicktickController:
         self.deleted_tasks = []
         self.abandoned_tasks = []
 
-    def sync_tasks(self, notion_controller: NotionController):
+    def sync_tasks(self):
         logging.info(f"Syncing ticktick tasks")
         response = self.ticktick_client.get(self.get_state, token_required=True)
         self.completed_tasks = self.ticktick_client.get(self.completed_tasks_url, token_required=True)
@@ -44,6 +44,46 @@ class TicktickController:
         self.tasks = response['syncTaskBean']['update'] + self.completed_tasks
         self.tags = response['tags']
         self.get_relevant_tasks()
+
+    def parse_ticktick_tasks(self, raw_tasks: List[dict]) -> List[dict]:
+
+        column_tags = {
+            "61c62f26824afc6c763523ec": "to-do",
+            "61c62f34824afc6c763523fb": "analyze",
+            "61c62f41824afc6c76352403": "in-progress",
+            "61c62f48824afc6c76352411": "review",
+            "61c62f4d824afc6c76352419": "done",
+            "2afe1c885d4e4164bacc22d582ba50b8": "to-do",
+            "36725d09fd3b46569f1e8dbbd2e4c1f3": "analyze",
+            "fdd54b4fc75c435190a9e87617dd6bab": "in-progress",
+            "b19e1b221573467baef4378e2dbf0571": "review",
+            "e09901cc2b2d4fad99bccfbf539189f8": "done"
+        }
+
+        ticktick_tasks = []
+        for raw_task in raw_tasks:
+            task = {}
+            task[TaskData.TICKTICK_ID] = raw_task[ttp.ID]
+            task[TaskData.NOTION_ID] = None
+            task[TaskData.TITLE] = TaskUtilities.get_task_title(raw_task)
+            task[TaskData.POINTS] = TaskUtilities.get_task_points(raw_task)
+            task[TaskData.ENERGY] = TaskUtilities.get_task_energy(raw_task)
+            task[TaskData.DUE_DATE] = TaskUtilities.get_task_date(raw_task)
+            task[TaskData.FOCUS_TIME] = TaskUtilities.get_task_focus_time(raw_task)
+            task[TaskData.DONE] = self.was_task_completed(task)
+
+            try:
+                task[TaskData.TAGS] = raw_task[ttp.TAGS]
+            except KeyError:
+                task[TaskData.TAGS] = []
+
+            try:
+                task[TaskData.STATUS] = column_tags[raw_task[ttp.COLUMN_ID]]
+            except KeyError:
+                task[TaskData.STATUS] = ""
+
+            ticktick_tasks.append(task)
+        return ticktick_tasks
 
     def filter_tasks(self, parameter: TaskTicktickParameters, value: Union[str, int, bool]) -> List[dict]:
         logging.info(f"Getting filtered tasks {parameter}: {value}")
@@ -69,7 +109,7 @@ class TicktickController:
             relevant_tasks += self.filter_tasks(ttp.PROJECT_ID, project_id)
 
         relevant_tasks = list(filter(TaskUtilities.is_task_valid, relevant_tasks))
-        relevant_tasks = TaskUtilities.parse_ticktick_tasks(relevant_tasks)
+        relevant_tasks = self.parse_ticktick_tasks(relevant_tasks)
         relevant_tasks.sort(key=lambda task: task[td.TITLE])
 
         self.relevant_tasks = relevant_tasks
@@ -84,8 +124,6 @@ class TicktickController:
         return not any(map(condition, notion_tasks))
 
     def was_task_completed(self, task: dict) -> bool:
-        logging.info(f"Checking if task was completed {task}")
-
         def condition(completed_task):
             try:
                 return task[td.TICKTICK_ID] == completed_task[ttp.ID] and task[td.DUE_DATE] in completed_task[ttp.START_DATE]
@@ -181,6 +219,6 @@ class TicktickController:
                 return False
 
         raw_checked_habits = list(filter(habits_filter, self.completed_tasks))
-        checked_habits = TaskUtilities.parse_ticktick_tasks(raw_checked_habits)
+        checked_habits = self.parse_ticktick_tasks(raw_checked_habits)
 
         return checked_habits

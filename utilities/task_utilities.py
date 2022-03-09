@@ -16,15 +16,28 @@ class TaskUtilities:
 
     @staticmethod
     def are_tasks_synced(notion_tasks, ticktick_tasks):
-        tasks_synced = False
-        if len(notion_tasks) == len(ticktick_tasks):
-            def compare_tasks(notion_task, ticktick_task):
-                tasks_equal = True
-                for task_parameter in [parameter for parameter in TaskData if parameter not in [TaskData.NOTION_ID]]:
-                    tasks_equal &= notion_task[task_parameter] == ticktick_task[task_parameter]
-                return tasks_equal
+        logging.info(f"Figuring out if notion and ticktick tasks are in sync...")
 
-            tasks_synced = all(map(compare_tasks, notion_tasks, ticktick_tasks))
+        tasks_synced = False
+
+        def compare_tasks(notion_task, ticktick_task):
+            tasks_equal = True
+            for task_parameter in [parameter for parameter in TaskData if parameter not in [TaskData.NOTION_ID]]:
+                if "habit" in ticktick_task[TaskData.TAGS] and task_parameter == TaskData.STATUS:
+                    continue
+
+                tasks_equal &= notion_task[task_parameter] == ticktick_task[task_parameter]
+            return tasks_equal
+
+        def find_notion_task(ticktick_task):
+            for notion_task in notion_tasks:
+                if notion_task[TaskData.TICKTICK_ID] == ticktick_task[TaskData.TICKTICK_ID]:
+                    return notion_task
+
+        if len(ticktick_tasks) <= len(notion_tasks):
+            filtered_notion_tasks = list(map(find_notion_task, ticktick_tasks))
+            tasks_synced = all(map(compare_tasks, filtered_notion_tasks, ticktick_tasks))
+
         logging.info(f"Are tasks synced: {tasks_synced}")
         return tasks_synced
 
@@ -40,7 +53,7 @@ class TaskUtilities:
             task[TaskData.TITLE] = properties[tnp.TASK][tnp.TITLE][0][tnp.PLAIN_TEXT]
             task[TaskData.POINTS] = properties[tnp.POINTS][tnp.NUMBER]
             task[TaskData.ENERGY] = properties[tnp.ENERGY][tnp.NUMBER]
-            task[TaskData.FOCUS_TIME] = properties[tnp.FOCUS_TIME][tnp.NUMBER]
+            task[TaskData.FOCUS_TIME] = float(properties[tnp.FOCUS_TIME][tnp.NUMBER])
             task[TaskData.DUE_DATE] = properties[tnp.DUE_DATE][tnp.DATE][tnp.START]
 
             try:
@@ -55,47 +68,6 @@ class TaskUtilities:
 
             notion_tasks.append(task)
         return notion_tasks
-
-    @classmethod
-    def parse_ticktick_tasks(cls, raw_tasks: List[dict]) -> List[dict]:
-
-        column_tags = {
-            "61c62f26824afc6c763523ec": "to-do",
-            "61c62f34824afc6c763523fb": "analyze",
-            "61c62f41824afc6c76352403": "in-progress",
-            "61c62f48824afc6c76352411": "review",
-            "61c62f4d824afc6c76352419": "done",
-            "2afe1c885d4e4164bacc22d582ba50b8": "to-do",
-            "36725d09fd3b46569f1e8dbbd2e4c1f3": "analyze",
-            "fdd54b4fc75c435190a9e87617dd6bab": "in-progress",
-            "b19e1b221573467baef4378e2dbf0571": "review",
-            "e09901cc2b2d4fad99bccfbf539189f8": "done"
-        }
-
-        ticktick_tasks = []
-        for raw_task in raw_tasks:
-            task = {}
-            task[TaskData.TICKTICK_ID] = raw_task[ttp.ID]
-            task[TaskData.NOTION_ID] = None
-            task[TaskData.DONE] = False
-            task[TaskData.TITLE] = cls.get_task_title(raw_task)
-            task[TaskData.POINTS] = cls.get_task_points(raw_task)
-            task[TaskData.ENERGY] = cls.get_task_energy(raw_task)
-            task[TaskData.DUE_DATE] = cls.get_task_date(raw_task)
-            task[TaskData.FOCUS_TIME] = cls.get_task_focus_time(raw_task)
-
-            try:
-                task[TaskData.TAGS] = raw_task[ttp.TAGS]
-            except KeyError:
-                task[TaskData.TAGS] = []
-
-            try:
-                task[TaskData.STATUS] = column_tags[raw_task[ttp.COLUMN_ID]]
-            except KeyError:
-                task[TaskData.STATUS] = ""
-
-            ticktick_tasks.append(task)
-        return ticktick_tasks
 
     @staticmethod
     def get_task_title(task: dict) -> str:

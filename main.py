@@ -14,7 +14,7 @@ ticktick = TicktickController(os.getenv('TT_client_id'),
                               os.getenv('TT_pass'))
 
 notion.get_active_tasks()
-ticktick.sync_tasks(notion)
+ticktick.sync_tasks()
 
 checked_habits = ticktick.get_checked_habits()
 notion.check_habits(checked_habits)
