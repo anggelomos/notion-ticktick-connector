@@ -1,10 +1,8 @@
 import logging
 from typing import List
-
-from data.regex_patterns import RegexPatterns
 from data.task_data import TaskData
-import re
-
+import pytz
+from dateutil import parser
 from data.task_notion_parameters import TaskNotionParameters as tnp
 from data.task_ticktick_parameters import TaskTicktickParameters as ttp
 
@@ -97,10 +95,13 @@ class TaskUtilities:
 
     @staticmethod
     def get_task_date(task: dict) -> str:
-        try:
-            return re.search(RegexPatterns.GET_TASK_DATE, task[ttp.START_DATE]).group(1)
-        except KeyError:
-            return ""
+        task_timezone = pytz.timezone(task[ttp.TIMEZONE])
+        task_raw_date = parser.parse(task[ttp.START_DATE])
+
+        localized_task_date = task_raw_date.astimezone(task_timezone)
+        task_date = localized_task_date.strftime("%Y-%m-%d")
+
+        return task_date
 
     @staticmethod
     def get_task_focus_time(task: dict) -> float:
@@ -112,7 +113,7 @@ class TaskUtilities:
     @classmethod
     def is_task_valid(cls, task: dict) -> bool:
 
-        if not cls.get_task_date(task):
+        if ttp.START_DATE not in task:
             return False
 
         return True
