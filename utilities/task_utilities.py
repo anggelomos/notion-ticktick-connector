@@ -71,22 +71,28 @@ class TaskUtilities:
 
     @staticmethod
     def get_task_title(task: dict) -> str:
-        return re.search(RegexPatterns.GET_TASK_TITLE, task[ttp.TITLE]).group(1)
+        return task[ttp.TITLE].strip()
 
     @staticmethod
     def get_task_points(task: dict) -> int:
-        task_has_points = re.search(RegexPatterns.GET_TASK_POINTS, task[ttp.TITLE])
+        points_keyword = "points"
+        points_tag = next(filter(lambda tag: points_keyword in tag, task[ttp.TAGS]), None)
 
-        if task_has_points:
-            return int(task_has_points.group(1))
+        if points_tag:
+            task_points = int(points_tag.replace(points_keyword+"-", ""))
+            return  task_points
+
         return 0
 
     @staticmethod
     def get_task_energy(task: dict) -> int:
-        task_has_energy = re.search(RegexPatterns.GET_TASK_ENERGY, task[ttp.TITLE])
+        energy_keyword = "energy"
+        energy_tag = next(filter(lambda tag: energy_keyword in tag, task[ttp.TAGS]), None)
 
-        if task_has_energy:
-            return int(task_has_energy.group(1))
+        if energy_tag:
+            task_energy = int(energy_tag.replace(energy_keyword + "-", ""))
+            return task_energy
+
         return 0
 
     @staticmethod
@@ -107,12 +113,6 @@ class TaskUtilities:
     def is_task_valid(cls, task: dict) -> bool:
 
         if not cls.get_task_date(task):
-            return False
-
-        if not cls.get_task_points(task):
-            return False
-
-        if not cls.get_task_energy(task):
             return False
 
         return True

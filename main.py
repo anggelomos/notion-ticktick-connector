@@ -25,5 +25,6 @@ def main():
         ticktick.update_tasks(notion)
         ticktick.add_new_tasks(notion)
 
+
 if __name__ == "__main__":
     main()
