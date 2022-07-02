@@ -1,4 +1,5 @@
 import datetime
+from typing import List
 
 from data.habit_list import HabitList
 from data.task_data import TaskData
@@ -18,6 +19,15 @@ class HabitUtilities:
 
     @classmethod
     def parse_habit_task(cls, habit: dict) -> tuple:
-        clean_habit_tags = list(filter(lambda tag: tag != HabitList.HABIT.value, habit[TaskData.TAGS]))
 
-        return clean_habit_tags[0], habit[TaskData.DUE_DATE]
+        def get_clean_habit_tag(habit_tags: List[str]) -> str:
+            unnecessary_habit_tags = [HabitList.HABIT.value, TaskData.POINTS.value, TaskData.ENERGY.value]
+
+            for tag in habit_tags:
+                valid_tag = all(map(lambda un_tag: not (un_tag in tag), unnecessary_habit_tags))
+
+                if valid_tag:
+                    return tag
+
+        cleaned_habit_tag = get_clean_habit_tag(habit[TaskData.TAGS])
+        return cleaned_habit_tag, habit[TaskData.DUE_DATE]

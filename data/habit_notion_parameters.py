@@ -7,7 +7,7 @@ class HabitNotionParameters:
     PROPERTIES = "properties"
     EMOJI = "Emoji"
     WEEK_NUMBER = "week #"
-    YEAR = "year"
+    YEAR = "year #"
     HABIT = "habit"
 
     # Data types

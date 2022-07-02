@@ -2,6 +2,7 @@ import logging
 from typing import List, Union
 
 from controllers.notion_controller import NotionController
+from data.habit_list import HabitList
 from data.task_ticktick_parameters import TaskTicktickParameters as ttp, TaskTicktickParameters
 from controllers.ticktick_api import TicktickAPI
 from data.task_data import TaskData as td, TaskData
@@ -193,7 +194,9 @@ class TicktickController:
         for task in relevant_tasks:
             if self.was_task_updated(task, notion.active_tasks):
                 notion_id = notion.get_notion_id(task[td.TICKTICK_ID])
-                if self.was_date_updated(task, notion.active_tasks):
+
+                if self.was_date_updated(task, notion.active_tasks) and not (HabitList.HABIT.value in task[td.TAGS]):
+
                     notion.change_task_state(notion_id, active=False)
                     notion.create_task(task)
                 else:
@@ -206,17 +209,20 @@ class TicktickController:
         relevant_tasks = self.relevant_tasks.copy()
         for task in relevant_tasks:
             if self.is_task_new(task, notion.active_tasks):
-                notion.create_task(task)
+                created_task_data = notion.create_task(task)
 
                 self.relevant_tasks.remove(task)
+
+                if self.was_task_completed(task):
+                    notion_id = created_task_data["id"]
+                    notion.complete_task(notion_id)
 
     def get_checked_habits(self) -> List[dict]:
 
         def habits_filter(task):
-            try:
-                return "habit" in task[ttp.TAGS] and len(task[ttp.TAGS]) >= 2
-            except KeyError:
-                return False
+            if ttp.TAGS in task:
+                return "habit" in task[ttp.TAGS] and len(task[ttp.TAGS]) >= 4
+            return False
 
         raw_checked_habits = list(filter(habits_filter, self.completed_tasks))
         checked_habits = self.parse_ticktick_tasks(raw_checked_habits)

@@ -11,3 +11,5 @@ class HabitList(Enum):
     STUDY = "study"
     READ = "read"
     MEDITATE = "meditate"
+    WALK = "walk"
+    TAKE_SHOWER = "take-shower"

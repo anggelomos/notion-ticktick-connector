@@ -19,7 +19,7 @@ def main():
 
     checked_habits = ticktick.get_checked_habits()
     notion.check_habits(checked_habits)
-    if not TaskUtilities.are_tasks_synced(notion.active_tasks, ticktick.relevant_tasks):
+    if not TaskUtilities().are_tasks_synced(notion.active_tasks, ticktick.relevant_tasks):
         ticktick.complete_tasks(notion)
         ticktick.delete_tasks(notion)
         ticktick.update_tasks(notion)

@@ -13,19 +13,22 @@ class TaskUtilities:
     NOTION_IDS_FILE_PATH = "resources/notion_ids.json"
 
     @staticmethod
-    def are_tasks_synced(notion_tasks, ticktick_tasks):
+    def compare_tasks(notion_task, ticktick_task):
+        tasks_equal = True
+        comparing_parameters = [param for param in TaskData if param not in [TaskData.NOTION_ID,
+                                                                             TaskData.TICKTICK_ID]]
+
+        for task_parameter in comparing_parameters:
+            if "habit" in ticktick_task[TaskData.TAGS] and task_parameter == TaskData.STATUS:
+                continue
+
+            tasks_equal &= notion_task[task_parameter] == ticktick_task[task_parameter]
+        return tasks_equal
+
+    def are_tasks_synced(self, notion_tasks, ticktick_tasks):
         logging.info(f"Figuring out if notion and ticktick tasks are in sync...")
 
         tasks_synced = False
-
-        def compare_tasks(notion_task, ticktick_task):
-            tasks_equal = True
-            for task_parameter in [parameter for parameter in TaskData if parameter not in [TaskData.NOTION_ID]]:
-                if "habit" in ticktick_task[TaskData.TAGS] and task_parameter == TaskData.STATUS:
-                    continue
-
-                tasks_equal &= notion_task[task_parameter] == ticktick_task[task_parameter]
-            return tasks_equal
 
         def find_notion_task(ticktick_task):
             for notion_task in notion_tasks:
@@ -34,7 +37,7 @@ class TaskUtilities:
 
         if len(ticktick_tasks) <= len(notion_tasks):
             filtered_notion_tasks = list(map(find_notion_task, ticktick_tasks))
-            tasks_synced = all(map(compare_tasks, filtered_notion_tasks, ticktick_tasks))
+            tasks_synced = all(map(self.compare_tasks, filtered_notion_tasks, ticktick_tasks))
 
         logging.info(f"Are tasks synced: {tasks_synced}")
         return tasks_synced
@@ -73,22 +76,20 @@ class TaskUtilities:
 
     @staticmethod
     def get_task_points(task: dict) -> int:
-        points_keyword = "points"
-        points_tag = next(filter(lambda tag: points_keyword in tag, task[ttp.TAGS]), None)
+        points_tag = next(filter(lambda tag: TaskData.POINTS.value in tag, task[ttp.TAGS]), None)
 
         if points_tag:
-            task_points = int(points_tag.replace(points_keyword+"-", ""))
-            return  task_points
+            task_points = int(points_tag.replace(TaskData.POINTS.value+"-", ""))
+            return task_points
 
         return 0
 
     @staticmethod
     def get_task_energy(task: dict) -> int:
-        energy_keyword = "energy"
-        energy_tag = next(filter(lambda tag: energy_keyword in tag, task[ttp.TAGS]), None)
+        energy_tag = next(filter(lambda tag: TaskData.ENERGY.value in tag, task[ttp.TAGS]), None)
 
         if energy_tag:
-            task_energy = int(energy_tag.replace(energy_keyword + "-", ""))
+            task_energy = int(energy_tag.replace(TaskData.ENERGY.value + "-", ""))
             return task_energy
 
         return 0
