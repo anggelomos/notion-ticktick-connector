@@ -1,11 +1,9 @@
 import logging
 from typing import List
 from data.task_data import TaskData
-import pytz
-from dateutil import parser
+from dateutil import parser, tz
 from data.task_notion_parameters import TaskNotionParameters as tnp
 from data.task_ticktick_parameters import TaskTicktickParameters as ttp
-
 
 class TaskUtilities:
     
@@ -96,7 +94,7 @@ class TaskUtilities:
 
     @staticmethod
     def get_task_date(task: dict) -> str:
-        task_timezone = pytz.timezone(task[ttp.TIMEZONE])
+        task_timezone = tz.gettz(task[ttp.TIMEZONE])
         task_raw_date = parser.parse(task[ttp.START_DATE])
 
         localized_task_date = task_raw_date.astimezone(task_timezone)
