@@ -67,8 +67,8 @@ class TicktickController:
             task[TaskData.TICKTICK_ID] = raw_task[ttp.ID]
             task[TaskData.NOTION_ID] = None
             task[TaskData.TITLE] = TaskUtilities.get_task_title(raw_task)
-            task[TaskData.POINTS] = TaskUtilities.get_task_points(raw_task)
-            task[TaskData.ENERGY] = TaskUtilities.get_task_energy(raw_task)
+            task[TaskData.POINTS] = TaskUtilities.get_task_estimation(raw_task, TaskData.POINTS)
+            task[TaskData.ENERGY] = TaskUtilities.get_task_estimation(raw_task, TaskData.ENERGY)
             task[TaskData.DUE_DATE] = TaskUtilities.get_task_date(raw_task)
             task[TaskData.FOCUS_TIME] = TaskUtilities.get_task_focus_time(raw_task)
             task[TaskData.DONE] = self.was_task_completed(task)

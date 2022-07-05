@@ -76,22 +76,12 @@ class TaskUtilities:
         return task[ttp.TITLE].strip()
 
     @staticmethod
-    def get_task_points(task: dict) -> int:
-        points_tag = next(filter(lambda tag: TaskData.POINTS.value in tag, task[ttp.TAGS]), None)
+    def get_task_estimation(task: dict, field: TaskData) -> int:
+        estimation_tag = next(filter(lambda tag: field.value in tag, task[ttp.TAGS]), None)
 
-        if points_tag:
-            task_points = int(points_tag.replace(TaskData.POINTS.value+"-", ""))
-            return task_points
-
-        return 0
-
-    @staticmethod
-    def get_task_energy(task: dict) -> int:
-        energy_tag = next(filter(lambda tag: TaskData.ENERGY.value in tag, task[ttp.TAGS]), None)
-
-        if energy_tag:
-            task_energy = int(energy_tag.replace(TaskData.ENERGY.value + "-", ""))
-            return task_energy
+        if estimation_tag:
+            task_estimation = int(estimation_tag.replace(field.value + "-", ""))
+            return task_estimation
 
         return 0
 
@@ -107,10 +97,14 @@ class TaskUtilities:
 
     @staticmethod
     def get_task_focus_time(task: dict) -> float:
-        try:
-            return round(sum(map(lambda summary: summary[ttp.POMO_DURATION] + summary[ttp.STOPWATCH_DURATION], task[ttp.FOCUS_SUMMARIES])) / 3600, 2)
-        except KeyError:
-            return 0
+        focus_time = 0
+
+        if ttp.FOCUS_SUMMARIES in task:
+            raw_focus_time = map(lambda summary: summary[ttp.POMO_DURATION] + summary[ttp.STOPWATCH_DURATION],
+                                 task[ttp.FOCUS_SUMMARIES])
+            focus_time = round(sum(raw_focus_time) / 3600, 2)
+
+        return focus_time
 
     @classmethod
     def get_task_tags(cls, raw_task: dict) -> List[str]:
