@@ -73,10 +73,9 @@ class TicktickController:
             task[TaskData.FOCUS_TIME] = TaskUtilities.get_task_focus_time(raw_task)
             task[TaskData.DONE] = self.was_task_completed(task)
 
-            try:
-                task[TaskData.TAGS] = raw_task[ttp.TAGS]
-            except KeyError:
-                task[TaskData.TAGS] = []
+            task[TaskData.TAGS] = []
+            if ttp.TAGS in raw_task:
+                task[TaskData.TAGS] = TaskUtilities.get_task_tags(raw_task)
 
             try:
                 task[TaskData.STATUS] = column_tags[raw_task[ttp.COLUMN_ID]]
@@ -84,6 +83,7 @@ class TicktickController:
                 task[TaskData.STATUS] = ""
 
             ticktick_tasks.append(task)
+
         return ticktick_tasks
 
     def filter_tasks(self, parameter: TaskTicktickParameters, value: Union[str, int, bool]) -> List[dict]:

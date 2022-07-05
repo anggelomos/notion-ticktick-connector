@@ -1,5 +1,8 @@
 import logging
+import re
 from typing import List
+
+from data.regular_expressions.filter_tags import FilterTagsRegex
 from data.task_data import TaskData
 from dateutil import parser, tz
 from data.task_notion_parameters import TaskNotionParameters as tnp
@@ -34,7 +37,7 @@ class TaskUtilities:
                     return notion_task
 
         if len(ticktick_tasks) <= len(notion_tasks):
-            filtered_notion_tasks = list(map(find_notion_task, ticktick_tasks))
+            filtered_notion_tasks = list(filter(None, map(find_notion_task, ticktick_tasks)))
             tasks_synced = all(map(self.compare_tasks, filtered_notion_tasks, ticktick_tasks))
 
         logging.info(f"Are tasks synced: {tasks_synced}")
@@ -110,11 +113,23 @@ class TaskUtilities:
             return 0
 
     @classmethod
+    def get_task_tags(cls, raw_task: dict) -> List[str]:
+        raw_tags = raw_task[ttp.TAGS]
+        task_tags = []
+
+        for raw_tag in raw_tags:
+            valid_tag = all(map(lambda regex: not bool(re.match(regex.value, raw_tag)), FilterTagsRegex))
+
+            if valid_tag:
+                task_tags.append(raw_tag)
+
+        return task_tags
+
+    @classmethod
     def is_task_valid(cls, task: dict) -> bool:
 
         if ttp.START_DATE not in task:
             return False
-
         return True
 
     @staticmethod
