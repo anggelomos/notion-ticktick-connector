@@ -161,10 +161,12 @@ class TicktickController:
         logging.info(f"Checking if task was deleted {task}")
 
         def condition_deleted(deleted_task):
-            return task[td.TICKTICK_ID] == deleted_task[ttp.ID] and task[td.DUE_DATE] in deleted_task[ttp.START_DATE]
+            if ttp.START_DATE in deleted_task:
+                return task[td.TICKTICK_ID] == deleted_task[ttp.ID] and task[td.DUE_DATE] in deleted_task[ttp.START_DATE]
 
         def condition_abandoned(abandoned_task):
-            return task[td.TICKTICK_ID] == abandoned_task[ttp.ID] and task[td.DUE_DATE] in abandoned_task[ttp.START_DATE]
+            if ttp.START_DATE in abandoned_task:
+                return task[td.TICKTICK_ID] == abandoned_task[ttp.ID] and task[td.DUE_DATE] in abandoned_task[ttp.START_DATE]
 
         was_task_deleted = any(map(condition_deleted, self.deleted_tasks))
         was_task_abandoned = any(map(condition_abandoned, self.abandoned_tasks))
