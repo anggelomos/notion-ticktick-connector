@@ -196,14 +196,7 @@ class TicktickController:
         for task in relevant_tasks:
             if self.was_task_updated(task, notion.active_tasks):
                 notion_id = notion.get_notion_id(task[td.TICKTICK_ID])
-
-                if self.was_date_updated(task, notion.active_tasks) and not (HabitList.HABIT.value in task[td.TAGS]):
-
-                    notion.change_task_state(notion_id, active=False)
-                    notion.create_task(task)
-                else:
-                    notion.update_task(notion_id, task)
-
+                notion.update_task(notion_id, task)
                 self.relevant_tasks.remove(task)
 
     def add_new_tasks(self, notion):
