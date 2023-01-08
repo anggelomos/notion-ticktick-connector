@@ -63,19 +63,21 @@ class TicktickController:
 
         ticktick_tasks = []
         for raw_task in raw_tasks:
-            task = {}
+            task = dict()
             task[TaskData.TICKTICK_ID] = raw_task[ttp.ID]
             task[TaskData.NOTION_ID] = None
             task[TaskData.TITLE] = TaskUtilities.get_task_title(raw_task)
-            task[TaskData.POINTS] = TaskUtilities.get_task_estimation(raw_task, TaskData.POINTS)
-            task[TaskData.ENERGY] = TaskUtilities.get_task_estimation(raw_task, TaskData.ENERGY)
             task[TaskData.DUE_DATE] = TaskUtilities.get_task_date(raw_task)
             task[TaskData.FOCUS_TIME] = TaskUtilities.get_task_focus_time(raw_task)
             task[TaskData.DONE] = self.was_task_completed(task)
 
             task[TaskData.TAGS] = []
+            task[TaskData.POINTS] = 0
+            task[TaskData.ENERGY] = 0
             if ttp.TAGS in raw_task:
                 task[TaskData.TAGS] = TaskUtilities.get_task_tags(raw_task)
+                task[TaskData.POINTS] = TaskUtilities.get_task_estimation(raw_task, TaskData.POINTS)
+                task[TaskData.ENERGY] = TaskUtilities.get_task_estimation(raw_task, TaskData.ENERGY)
 
             try:
                 task[TaskData.STATUS] = column_tags[raw_task[ttp.COLUMN_ID]]
@@ -100,6 +102,8 @@ class TicktickController:
         project_ids = {
             "inbox_tasks": "inbox114478622",
             "life_kanban": "61c62f198f08c92d0584f678",
+            "current_backlog": "61c634f58f08c92d058540ba",
+            "tasks_backlog": "637a952f8f0812477fbdf0a6",
             "work_tasks": "61c62ff88f08c92d058504d5",
             "work_reminders": "5f71cb1e22d45e44fa87113a",
             "habits": "617f4bd08f08c83aa52559e0",

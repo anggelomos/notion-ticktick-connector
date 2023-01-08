@@ -17,7 +17,8 @@ class TaskUtilities:
     def compare_tasks(notion_task, ticktick_task):
         tasks_equal = True
         comparing_parameters = [param for param in TaskData if param not in [TaskData.NOTION_ID,
-                                                                             TaskData.TICKTICK_ID]]
+                                                                             TaskData.TICKTICK_ID,
+                                                                             TaskData.STATUS]]
 
         for task_parameter in comparing_parameters:
             if "habit" in ticktick_task[TaskData.TAGS] and task_parameter == TaskData.STATUS:
@@ -37,7 +38,7 @@ class TaskUtilities:
                     return notion_task
 
         if len(ticktick_tasks) <= len(notion_tasks):
-            filtered_notion_tasks = list(filter(None, map(find_notion_task, ticktick_tasks)))
+            filtered_notion_tasks = list(map(find_notion_task, ticktick_tasks))
             tasks_synced = all(map(self.compare_tasks, filtered_notion_tasks, ticktick_tasks))
 
         logging.info(f"Are tasks synced: {tasks_synced}")
@@ -80,7 +81,7 @@ class TaskUtilities:
         estimation_tag = next(filter(lambda tag: field.value in tag, task[ttp.TAGS]), None)
 
         if estimation_tag:
-            task_estimation = int(estimation_tag.replace(field.value + "-", ""))
+            task_estimation = int(estimation_tag.replace(field.value, ""))
             return task_estimation
 
         return 0
@@ -112,7 +113,7 @@ class TaskUtilities:
         task_tags = []
 
         for raw_tag in raw_tags:
-            valid_tag = all(map(lambda regex: not bool(re.match(regex.value, raw_tag)), FilterTagsRegex))
+            valid_tag = all(map(lambda regex, value=raw_tag: not bool(re.match(regex.value, value)), FilterTagsRegex))
 
             if valid_tag:
                 task_tags.append(raw_tag)
@@ -121,10 +122,7 @@ class TaskUtilities:
 
     @classmethod
     def is_task_valid(cls, task: dict) -> bool:
-
-        if ttp.START_DATE not in task:
-            return False
-        return True
+        return ttp.START_DATE in task
 
     @staticmethod
     def parse_tags(tags: List[str]) -> List[dict]:
