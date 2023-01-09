@@ -20,6 +20,9 @@ class TaskUtilities:
                                                                              TaskData.TICKTICK_ID,
                                                                              TaskData.STATUS]]
 
+        if not notion_task or not ticktick_task:
+            return True
+
         for task_parameter in comparing_parameters:
             if "habit" in ticktick_task[TaskData.TAGS] and task_parameter == TaskData.STATUS:
                 continue

@@ -1,11 +1,15 @@
 import logging
+import json
+from datetime import datetime
 from typing import List, Union
 
 from controllers.notion_controller import NotionController
 from data.habit_list import HabitList
+from data.payloads.ticktick_payloads import TicktickPayloads
 from data.task_ticktick_parameters import TaskTicktickParameters as ttp, TaskTicktickParameters
 from controllers.ticktick_api import TicktickAPI
 from data.task_data import TaskData as td, TaskData
+from utilities.habit_utilities import HabitUtilities
 from utilities.task_utilities import TaskUtilities
 
 
@@ -15,6 +19,7 @@ class TicktickController:
     notion_ids = {}
     BASE_URL = "/api/v2"
     get_state = BASE_URL + "/batch/check/0"
+    habit_checkins_url = BASE_URL + "/habitCheckins/query"
     completed_tasks_url = BASE_URL + "/project/all/closed?from=&to=&status=Completed"
     abandoned_tasks_url = BASE_URL + "/project/all/closed?from=&to=&status=Abandoned"
     deleted_tasks_url = BASE_URL + "/project/all/trash/pagination?start=0&limit=50"
@@ -33,7 +38,7 @@ class TicktickController:
         self.abandoned_tasks = []
 
     def sync_tasks(self):
-        logging.info(f"Syncing ticktick tasks")
+        logging.info("Syncing ticktick tasks")
         response = self.ticktick_client.get(self.get_state, token_required=True)
         self.completed_tasks = self.ticktick_client.get(self.completed_tasks_url, token_required=True)
         self.deleted_tasks = self.ticktick_client.get(self.deleted_tasks_url, token_required=True)["tasks"]
@@ -45,6 +50,32 @@ class TicktickController:
         self.tasks = response['syncTaskBean']['update'] + self.completed_tasks
         self.tags = response['tags']
         self.get_relevant_tasks()
+
+    def get_habits(self):
+        logging.info("Getting habits")
+
+        habit_list = {
+            "63b3436f824afc1fd1e6e96c": "work-on-resolutions",
+            "63b33809824afc1fd1e6ca7b": "read",
+            "63b33c35824afc1fd1e6d3ea": "sleep-more-than-7-hours",
+            "63b31076824afc436b713c39": "go-to-bed-early",
+            "63b33cba824afc1fd1e6d740": "plan-day",
+            "63b33ce9824afc1fd1e6d990": "plan-week",
+            "63b33d1b824afc1fd1e6dce3": "plan-month",
+            "63b33fc0824afc1fd1e6e65e": "meditate",
+            "63b33db4824afc1fd1e6e2fb": "exercise",
+            "63b33ff5824afc1fd1e6e7b9": "journaling",
+            "63b32f82824afc1fd1e6c891": "learn-language"
+        }
+
+        checkins_start_date = 20221231
+        payload = TicktickPayloads.get_habits_checkins(habit_list, checkins_start_date)
+        habit_checkins_raw = self.ticktick_client.post(self.habit_checkins_url,
+                                                       payload,
+                                                       token_required=True)["checkins"]
+
+        return {habit_list[habit_id]: HabitUtilities.get_habit_checkins_date(checkins) for habit_id, checkins in habit_checkins_raw.items() if checkins}
+
 
     def parse_ticktick_tasks(self, raw_tasks: List[dict]) -> List[dict]:
 

@@ -6,9 +6,6 @@ class TicktickAPI:
     
     BASE_URL = "/api/v2"
     signin_url = BASE_URL+"/user/signin?wc=True&remember=True"
-    completed_tasks_url = BASE_URL+"/project/all/closed?from=&to=&status=Completed"
-    abandoned_tasks_url = BASE_URL+"/project/all/closed?from=&to=&status=Abandoned"
-    deleted_tasks_url = BASE_URL+"/project/all/trash/pagination?start=0&limit=50"
 
     def __init__(self, username: str, password: str):
         self.token = self.login(username, password)

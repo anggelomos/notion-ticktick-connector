@@ -17,8 +17,8 @@ def main():
     notion.get_active_tasks()
     ticktick.sync_tasks()
 
-    checked_habits = ticktick.get_checked_habits()
-    notion.check_habits(checked_habits)
+    habits = ticktick.get_habits()
+    notion.check_habits(habits)
     if not TaskUtilities().are_tasks_synced(notion.active_tasks, ticktick.relevant_tasks):
         ticktick.complete_tasks(notion)
         ticktick.delete_tasks(notion)

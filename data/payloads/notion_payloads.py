@@ -120,20 +120,12 @@ class NotionPayloads:
         return json.dumps(payload)
 
     @staticmethod
-    def get_habit_entry(habit: str, week_number: int, year: int) -> str:
-        payload = {
-                "filter": {
-                    "and": [
+    def get_habit_entry(habit: str, year: int, week_number: int = None) -> str:
+        filters = [
                         {
                             "property": hnp.HABIT,
                             "multi_select": {
                                 "contains": habit
-                            }
-                        },
-                        {
-                            "property": hnp.WEEK_NUMBER,
-                            "number": {
-                                "equals": week_number
                             }
                         },
                         {
@@ -143,6 +135,18 @@ class NotionPayloads:
                             }
                         }
                     ]
+
+        if week_number:
+            filters.append({
+                            "property": hnp.WEEK_NUMBER,
+                            "number": {
+                                "equals": week_number
+                            }
+                        })
+
+        payload = {
+                "filter": {
+                    "and": filters
                 }
             }
 
@@ -157,5 +161,21 @@ class NotionPayloads:
                         }
                     }
                 }
+
+        return json.dumps(payload)
+
+    @staticmethod
+    def clean_habit_checkins() -> str:
+        payload = {
+            "properties": {
+                "mon": {"checkbox": False},
+                "tue": {"checkbox": False},
+                "wed": {"checkbox": False},
+                "thu": {"checkbox": False},
+                "fri": {"checkbox": False},
+                "sat": {"checkbox": False},
+                "sun": {"checkbox": False}
+            }
+        }
 
         return json.dumps(payload)

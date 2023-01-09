@@ -80,14 +80,42 @@ class NotionController:
 
         self.notion_client.update_table_entry(page_id, payload)
 
-    def check_habits(self, checked_habits: List[dict]):
-        processed_habits = list(map(HabitUtilities.parse_habit_task, checked_habits))
+    def clean_habit_checkins(self, habit: str, year: int, week: int):
+        logging.info("Cleaning habit checkins")
+        payload = NotionPayloads.get_habit_entry(habit, year, week)
+        entry = self.notion_client.query_table(self.habits_table_id, payload)[0]
+        self.notion_client.update_table_entry(entry["id"], NotionPayloads.clean_habit_checkins())
 
-        for habit, date in processed_habits:
-            day, week_number, year = HabitUtilities.parse_habit_date(date)
+    def get_habit_checkins(self, habit: str, year: int) -> int:
+        payload = NotionPayloads.get_habit_entry(habit, year)
+        habit_entries = self.notion_client.query_table(self.habits_table_id, payload)
 
-            habit_entry_payload = NotionPayloads.get_habit_entry(habit, week_number, year)
-            habit_entry_id = self.notion_client.query_table(self.habits_table_id, habit_entry_payload)[0]["id"]
+        amount_checkins = 0
+        for entry in habit_entries:
+            amount_checkins += entry["properties"]["Amount checks"]["formula"]["number"]
 
-            check_habit_payload = NotionPayloads.check_habit(day)
-            self.notion_client.update_table_entry(habit_entry_id, check_habit_payload)
+        return amount_checkins
+
+    def check_habits(self, habits_to_check: dict):
+        logging.info("Checking habits in Notion")
+
+        for habit, checkins in habits_to_check.items():
+            logging.info(f"Checking habit {habit}")
+            _, last_checkin_week, last_checkin_year = HabitUtilities.parse_habit_date(checkins[-1])
+            current_checkins = self.get_habit_checkins(habit, last_checkin_year)
+            if current_checkins == len(checkins):
+                continue
+
+            self.clean_habit_checkins(habit, last_checkin_year, last_checkin_week-1)
+            self.clean_habit_checkins(habit, last_checkin_year, last_checkin_week)
+            for date in checkins:
+                day, week_number, year = HabitUtilities.parse_habit_date(date)
+
+                if week_number < last_checkin_week-1:
+                    continue
+
+                habit_entry_payload = NotionPayloads.get_habit_entry(habit, year, week_number)
+                habit_entry_id = self.notion_client.query_table(self.habits_table_id, habit_entry_payload)[0]["id"]
+
+                check_habit_payload = NotionPayloads.check_habit(day)
+                self.notion_client.update_table_entry(habit_entry_id, check_habit_payload)
