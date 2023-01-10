@@ -8,7 +8,10 @@ from data.task_data import TaskData
 class HabitUtilities:
 
     @classmethod
-    def get_habit_checkins_date(cls, checkins: List[dict]) -> List[str]:
+    def clean_habit_checkins(cls, checkins: List[dict]) -> List[str]:
+
+        if not checkins:
+            return []
 
         def parse_date(date: str) -> str:
             return datetime.strptime(str(date), '%Y%m%d').strftime('%Y-%m-%d')

@@ -73,8 +73,8 @@ class TicktickController:
         habit_checkins_raw = self.ticktick_client.post(self.habit_checkins_url,
                                                        payload,
                                                        token_required=True)["checkins"]
-
-        return {habit_list[habit_id]: HabitUtilities.get_habit_checkins_date(checkins) for habit_id, checkins in habit_checkins_raw.items() if checkins}
+        habit_checkins = {habit_id: HabitUtilities.clean_habit_checkins(checkins) for habit_id, checkins in habit_checkins_raw.items()}
+        return {habit_list[habit_id]: checkins for habit_id, checkins in habit_checkins.items() if checkins}
 
 
     def parse_ticktick_tasks(self, raw_tasks: List[dict]) -> List[dict]:
