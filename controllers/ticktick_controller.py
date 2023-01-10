@@ -3,6 +3,7 @@ import json
 from datetime import datetime
 from typing import List, Union
 
+from config import CHECKINS_START_DATE
 from controllers.notion_controller import NotionController
 from data.habit_list import HabitList
 from data.payloads.ticktick_payloads import TicktickPayloads
@@ -24,7 +25,7 @@ class TicktickController:
     abandoned_tasks_url = BASE_URL + "/project/all/closed?from=&to=&status=Abandoned"
     deleted_tasks_url = BASE_URL + "/project/all/trash/pagination?start=0&limit=50"
 
-    def __init__(self, client_id: str, client_secret: str, uri: str, username: str, password: str):
+    def __init__(self, username: str, password: str):
         self.state = {}
         self.inbox_id = None
         self.project_folders = []
@@ -68,13 +69,12 @@ class TicktickController:
             "63b32f82824afc1fd1e6c891": "learn-language"
         }
 
-        checkins_start_date = 20221231
-        payload = TicktickPayloads.get_habits_checkins(habit_list, checkins_start_date)
+        payload = TicktickPayloads.get_habits_checkins(habit_list, CHECKINS_START_DATE)
         habit_checkins_raw = self.ticktick_client.post(self.habit_checkins_url,
                                                        payload,
                                                        token_required=True)["checkins"]
-
-        return {habit_list[habit_id]: HabitUtilities.get_habit_checkins_date(checkins) for habit_id, checkins in habit_checkins_raw.items() if checkins}
+        habit_checkins = {habit_id: HabitUtilities.clean_habit_checkins(checkins) for habit_id, checkins in habit_checkins_raw.items()}
+        return {habit_list[habit_id]: checkins for habit_id, checkins in habit_checkins.items() if checkins}
 
 
     def parse_ticktick_tasks(self, raw_tasks: List[dict]) -> List[dict]:
@@ -246,15 +246,3 @@ class TicktickController:
                 if self.was_task_completed(task):
                     notion_id = created_task_data["id"]
                     notion.complete_task(notion_id)
-
-    def get_checked_habits(self) -> List[dict]:
-
-        def habits_filter(task):
-            if ttp.TAGS in task:
-                return "habit" in task[ttp.TAGS] and len(task[ttp.TAGS]) >= 4
-            return False
-
-        raw_checked_habits = list(filter(habits_filter, self.completed_tasks))
-        checked_habits = self.parse_ticktick_tasks(raw_checked_habits)
-
-        return checked_habits
