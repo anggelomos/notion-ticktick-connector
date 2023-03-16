@@ -1,9 +1,10 @@
 import json
 import http.client
+from typing import List
 
 
 class TicktickAPI:
-    
+
     BASE_URL = "/api/v2"
     signin_url = BASE_URL+"/user/signin?wc=True&remember=True"
 
@@ -36,7 +37,7 @@ class TicktickAPI:
         response = json.loads(res.read().decode("utf-8"))
         return response
 
-    def get(self, url: str, data=None, headers=None, token_required: bool = False) -> dict:
+    def get(self, url: str, data=None, headers=None, token_required: bool = False) -> dict | List[dict]:
         if data is None:
             data = {}
         if headers is None:

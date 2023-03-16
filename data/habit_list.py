@@ -2,7 +2,7 @@ from enum import Enum
 
 
 class HabitList(Enum):
-    
+
     HABIT = "habit"
     WORK_ON_RESOLUTIONS = "work-on-resolutions"
     READ = "read"

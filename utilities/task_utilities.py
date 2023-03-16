@@ -1,4 +1,3 @@
-import logging
 import re
 from typing import List
 
@@ -8,44 +7,8 @@ from dateutil import parser, tz
 from data.task_notion_parameters import TaskNotionParameters as tnp
 from data.task_ticktick_parameters import TaskTicktickParameters as ttp
 
+
 class TaskUtilities:
-    
-    ACTIVE_TASKS_FILE_PATH = "resources/active_tasks.json"
-    NOTION_IDS_FILE_PATH = "resources/notion_ids.json"
-
-    @staticmethod
-    def compare_tasks(notion_task, ticktick_task):
-        tasks_equal = True
-        comparing_parameters = [param for param in TaskData if param not in [TaskData.NOTION_ID,
-                                                                             TaskData.TICKTICK_ID,
-                                                                             TaskData.STATUS]]
-
-        if not notion_task or not ticktick_task:
-            return True
-
-        for task_parameter in comparing_parameters:
-            if "habit" in ticktick_task[TaskData.TAGS] and task_parameter == TaskData.STATUS:
-                continue
-
-            tasks_equal &= notion_task[task_parameter] == ticktick_task[task_parameter]
-        return tasks_equal
-
-    def are_tasks_synced(self, notion_tasks, ticktick_tasks):
-        logging.info(f"Figuring out if notion and ticktick tasks are in sync...")
-
-        tasks_synced = False
-
-        def find_notion_task(ticktick_task):
-            for notion_task in notion_tasks:
-                if notion_task[TaskData.TICKTICK_ID] == ticktick_task[TaskData.TICKTICK_ID]:
-                    return notion_task
-
-        if len(ticktick_tasks) <= len(notion_tasks):
-            filtered_notion_tasks = list(map(find_notion_task, ticktick_tasks))
-            tasks_synced = all(map(self.compare_tasks, filtered_notion_tasks, ticktick_tasks))
-
-        logging.info(f"Are tasks synced: {tasks_synced}")
-        return tasks_synced
 
     @staticmethod
     def parse_notion_tasks(raw_tasks: List[dict]) -> List[dict]:
@@ -60,7 +23,11 @@ class TaskUtilities:
             task[TaskData.POINTS] = properties[tnp.POINTS][tnp.NUMBER]
             task[TaskData.ENERGY] = properties[tnp.ENERGY][tnp.NUMBER]
             task[TaskData.FOCUS_TIME] = float(properties[tnp.FOCUS_TIME][tnp.NUMBER])
-            task[TaskData.DUE_DATE] = properties[tnp.DUE_DATE][tnp.DATE][tnp.START]
+
+            try:
+                task[TaskData.DUE_DATE] = properties[tnp.DUE_DATE][tnp.DATE][tnp.START]
+            except (KeyError, TypeError):
+                task[TaskData.DUE_DATE] = ""
 
             try:
                 task[TaskData.TAGS] = list(map(lambda tag: tag[tnp.NAME], properties[tnp.TAGS][tnp.MULTI_SELECT]))
@@ -71,6 +38,11 @@ class TaskUtilities:
                 task[TaskData.STATUS] = properties[tnp.STATUS][tnp.SELECT][tnp.NAME]
             except (KeyError, TypeError):
                 task[TaskData.STATUS] = ""
+
+            try:
+                task[TaskData.RECURRENT_ID] = properties[tnp.RECURRENT_ID][tnp.RICH_TEXT][0][tnp.PLAIN_TEXT]
+            except (IndexError, KeyError):
+                task[TaskData.RECURRENT_ID] = ""
 
             notion_tasks.append(task)
         return notion_tasks
@@ -125,7 +97,7 @@ class TaskUtilities:
 
     @classmethod
     def is_task_valid(cls, task: dict) -> bool:
-        return ttp.START_DATE in task
+        return not task[TaskData.TITLE].startswith("$")
 
     @staticmethod
     def parse_tags(tags: List[str]) -> List[dict]:

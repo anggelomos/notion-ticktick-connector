@@ -15,6 +15,7 @@ class TaskNotionParameters:
     TAGS = "Tags"
     STATUS = "Status"
     FOCUS_TIME = "Focus time"
+    RECURRENT_ID = "Recurrent id"
 
     # Data types
     TITLE = "title"
