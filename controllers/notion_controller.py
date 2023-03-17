@@ -12,6 +12,7 @@ class NotionController:
     base_url = "https://api.notion.com/v1"
     tasks_table_id = "811f2937421e488793c3441b8ca65509"
     habits_table_id = "b19a57ac5bd14747bcf4eb0d98adef10"
+    expenses_table_id = "d7d450b6f89244cbbb27fe105121d3dd"
 
     def __init__(self, auth_secret: str, notion_version: str):
         self.notion_client = NotionAPI(auth_secret, notion_version)
@@ -129,3 +130,9 @@ class NotionController:
 
                 check_habit_payload = NotionPayloads.check_habit(day)
                 self.notion_client.update_table_entry(habit_entry_id, check_habit_payload)
+
+    def add_expense(self, title: str, amount: float, date: str):
+        logging.info(f"Adding expense {title} with amount {amount} and date {date}")
+
+        payload = NotionPayloads.add_expense(self.expenses_table_id, title, amount, date)
+        self.notion_client.create_table_entry(payload)

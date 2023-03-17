@@ -62,9 +62,13 @@ class TaskUtilities:
         return 0
 
     @staticmethod
-    def get_task_date(task: dict) -> str:
+    def get_task_date(task: dict, use_created_time: bool = False) -> str:
         task_timezone = tz.gettz(task[ttp.TIMEZONE])
-        task_raw_date = parser.parse(task[ttp.START_DATE])
+
+        if use_created_time:
+            task_raw_date = parser.parse(task[ttp.CREATED_TIME])
+        else:
+            task_raw_date = parser.parse(task[ttp.START_DATE])
 
         localized_task_date = task_raw_date.astimezone(task_timezone)
         task_date = localized_task_date.strftime("%Y-%m-%d")

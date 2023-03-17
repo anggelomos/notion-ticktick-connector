@@ -33,10 +33,10 @@ class NotionPayloads:
         }
 
     @staticmethod
-    def create_task(object_id, title: str, points: int, energy: int, focus_time: float, tags: List[str], due_date: str,
-                    ticktick_id: str, status: str, recurrent_id: str) -> str:
+    def create_task(database_id, title: str, points: int, energy: int, focus_time: float, tags: List[str],
+                    due_date: str, ticktick_id: str, status: str, recurrent_id: str) -> str:
         payload = {
-            "parent": {"database_id": object_id},
+            "parent": {"database_id": database_id},
             "properties": {
                 tnp.TITLE: {"title": [{"text": {"content": title}}]},
                 tnp.POINTS: {"number": points},
@@ -60,6 +60,19 @@ class NotionPayloads:
                     tnp.START: due_date
                 }
             }
+
+        return json.dumps(payload)
+
+    @staticmethod
+    def add_expense(database_id, title: str, amount: float, date: str) -> str:
+        payload = {
+            "parent": {"database_id": database_id},
+            "properties": {
+                    "producto": {"title": [{"text": {"content": title}}]},
+                    "egresos": {"number": amount},
+                    "fecha": {tnp.DATE: {tnp.START: date}}
+            }
+        }
 
         return json.dumps(payload)
 

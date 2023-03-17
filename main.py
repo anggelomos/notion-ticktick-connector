@@ -17,6 +17,7 @@ def main():
     notion.check_habits(habits)
 
     task_syncer = TaskSyncer(notion, ticktick)
+    task_syncer.sync_expenses()
     task_syncer.get_unsynced_tasks(notion.active_tasks, ticktick.relevant_tasks)
     task_syncer.sync_ticktick_tasks()
     task_syncer.sync_notion_tasks()

@@ -19,7 +19,8 @@ class TicktickController:
     active_tasks = {}
     notion_ids = {}
     BASE_URL = "/api/v2"
-    get_state = BASE_URL + "/batch/check/0"
+    get_state_url = BASE_URL + "/batch/check/0"
+    curl_task_url = BASE_URL + "/batch/task"
     habit_checkins_url = BASE_URL + "/habitCheckins/query"
     completed_tasks_url = BASE_URL + f"/project/all/closed?from={date_two_weeks_ago}%2005:00:00&to={date_tomorrow}" \
                                      f"%2004:59:00&status=Completed&limit=500"
@@ -30,6 +31,7 @@ class TicktickController:
     def __init__(self, username: str, password: str):
         self.ticktick_client = TicktickAPI(username, password)
         self.state = {}
+        self.raw_tasks = []
         self.tasks = []
         self.relevant_tasks = []
         self.completed_tasks = []
@@ -38,7 +40,7 @@ class TicktickController:
 
     def get_tasks(self):
         logging.info("Getting ticktick tasks")
-        response = self.ticktick_client.get(self.get_state, token_required=True)
+        response = self.ticktick_client.get(self.get_state_url, token_required=True)
         self.completed_tasks = self.parse_ticktick_tasks(self.ticktick_client.get(self.completed_tasks_url,
                                                                                   token_required=True),
                                                          completed_tasks=True)
@@ -47,8 +49,14 @@ class TicktickController:
         self.abandoned_tasks = self.parse_ticktick_tasks(self.ticktick_client.get(self.abandoned_tasks_url,
                                                                                   token_required=True))
 
-        self.tasks = self.parse_ticktick_tasks(response['syncTaskBean']['update']) + self.completed_tasks
+        self.raw_tasks = response['syncTaskBean']['update']
+        self.tasks = self.parse_ticktick_tasks(self.raw_tasks) + self.completed_tasks
         self.get_relevant_tasks()
+
+    def complete_task(self, task: dict):
+        logging.info(f"Completing task {task}")
+        payload = TicktickPayloads.complete_task(task[ttp.ID], task[ttp.PROJECT_ID])
+        self.ticktick_client.post(self.curl_task_url, payload, token_required=True)
 
     def get_habits(self):
         logging.info("Getting habits")
@@ -64,7 +72,7 @@ class TicktickController:
     def parse_ticktick_tasks(self, raw_tasks: List[dict], completed_tasks: bool = False) -> List[dict]:
         ticktick_tasks = []
         for raw_task in raw_tasks:
-            if raw_task[ttp.PROJECT_ID] not in TicktickIds.PROJECT_IDS:
+            if raw_task[ttp.PROJECT_ID] not in TicktickIds.PROJECT_IDS.values():
                 continue
 
             task = dict()

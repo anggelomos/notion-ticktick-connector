@@ -1,6 +1,6 @@
 import json
 import http.client
-from typing import List
+from typing import List, Union
 
 
 class TicktickAPI:
@@ -20,7 +20,7 @@ class TicktickAPI:
         response = self.post(self.signin_url, payload)
         return response["token"]
 
-    def post(self, url: str, data=None, headers=None, token_required: bool = False) -> dict:
+    def post(self, url: str, data: dict = None, headers: dict = None, token_required: bool = False) -> dict:
         if data is None:
             data = {}
         if headers is None:
@@ -37,7 +37,7 @@ class TicktickAPI:
         response = json.loads(res.read().decode("utf-8"))
         return response
 
-    def get(self, url: str, data=None, headers=None, token_required: bool = False) -> dict | List[dict]:
+    def get(self, url: str, data=None, headers=None, token_required: bool = False) -> Union[dict, List[dict]]:
         if data is None:
             data = {}
         if headers is None:

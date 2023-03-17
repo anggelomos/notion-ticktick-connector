@@ -15,14 +15,14 @@ class TicktickIds:
     }
 
     PROJECT_IDS = {
-        "inbox114478622": "inbox_tasks",
-        "61c62f198f08c92d0584f678": "life_kanban",
-        "61c634f58f08c92d058540ba": "current_backlog",
-        "637a952f8f0812477fbdf0a6": "tasks_backlog",
-        "6405589f8f08defd08e3e6b2": "long_term_reminders",
-        "61c62ff88f08c92d058504d5": "work_tasks",
-        "5f71cb1e22d45e44fa87113a": "work_reminders",
-        "617f4bd08f08c83aa52559e0": "habits",
+        "inbox_tasks": "inbox114478622",
+        "life_kanban": "61c62f198f08c92d0584f678",
+        "current_backlog": "61c634f58f08c92d058540ba",
+        "tasks_backlog": "637a952f8f0812477fbdf0a6",
+        "long_term_reminders": "6405589f8f08defd08e3e6b2",
+        "work_tasks": "61c62ff88f08c92d058504d5",
+        "work_reminders": "5f71cb1e22d45e44fa87113a",
+        "habits": "617f4bd08f08c83aa52559e0",
     }
 
     COLUMN_TAGS = {

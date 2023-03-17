@@ -4,6 +4,9 @@ from typing import List, Tuple
 from controllers.notion_controller import NotionController
 from controllers.ticktick_controller import TicktickController
 from data.task_data import TaskData as td, TaskData
+from data.task_ticktick_parameters import TaskTicktickParameters as ttp
+from data.ticktick_ids import TicktickIds as ttids
+from utilities.task_utilities import TaskUtilities
 
 
 class TaskSyncer:
@@ -178,3 +181,19 @@ class TaskSyncer:
 
     def add_task(self, task: dict):
         self.notion.create_task(task)
+
+    def sync_expenses(self):
+        expenses = [task for task in self.ticktick.raw_tasks
+                    if task[ttp.TITLE].startswith("$") and task[ttp.PROJECT_ID] == ttids.PROJECT_IDS["inbox_tasks"]]
+
+        def parse_expense_title(raw_title: str) -> Tuple[float, str]:
+            expense_amount = float(raw_title.split(" ")[0].replace("$", ""))
+            expense_title = " ".join(raw_title.split(" ")[1:])
+            return expense_amount, expense_title.capitalize()
+
+        for expense in expenses:
+            amount, title = parse_expense_title(expense[ttp.TITLE])
+            date = TaskUtilities.get_task_date(expense, use_created_time=True)
+
+            self.notion.add_expense(title, amount, date)
+            self.ticktick.complete_task(expense)
