@@ -5,6 +5,7 @@ from typing import List
 from config import CHECKINS_START_DATE
 from data.payloads.ticktick_payloads import TicktickPayloads
 from data.task_ticktick_parameters import TaskTicktickParameters as ttp
+from data.list_ticktick_parameters import ListTicktickParameters as ltp
 from controllers.ticktick_api import TicktickAPI
 from data.task_data import TaskData as td, TaskData
 from data.ticktick_ids import TicktickIds
@@ -31,6 +32,7 @@ class TicktickController:
     def __init__(self, username: str, password: str):
         self.ticktick_client = TicktickAPI(username, password)
         self.state = {}
+        self.lists = []
         self.raw_tasks = []
         self.tasks = []
         self.relevant_tasks = []
@@ -41,6 +43,9 @@ class TicktickController:
     def get_tasks(self):
         logging.info("Getting ticktick tasks")
         response = self.ticktick_client.get(self.get_state_url, token_required=True)
+        project_lists = self.get_project_lists(response["projectProfiles"])
+        TicktickIds.add_valid_lists(project_lists)
+
         self.completed_tasks = self.parse_ticktick_tasks(self.ticktick_client.get(self.completed_tasks_url,
                                                                                   token_required=True),
                                                          completed_tasks=True)
@@ -49,9 +54,14 @@ class TicktickController:
         self.abandoned_tasks = self.parse_ticktick_tasks(self.ticktick_client.get(self.abandoned_tasks_url,
                                                                                   token_required=True))
 
-        self.raw_tasks = response['syncTaskBean']['update']
+        self.raw_tasks = response["syncTaskBean"]["update"]
         self.tasks = self.parse_ticktick_tasks(self.raw_tasks) + self.completed_tasks
         self.get_relevant_tasks()
+
+    @staticmethod
+    def get_project_lists(lists: List[dict]) -> dict:
+        return {project_list[ltp.NAME]: project_list[ltp.ID] for project_list in lists
+                if project_list[ltp.GROUP_ID] == TicktickIds.PROJECTS_FOLDER_ID}
 
     def complete_task(self, task: dict):
         logging.info(f"Completing task {task}")
@@ -72,7 +82,7 @@ class TicktickController:
     def parse_ticktick_tasks(self, raw_tasks: List[dict], completed_tasks: bool = False) -> List[dict]:
         ticktick_tasks = []
         for raw_task in raw_tasks:
-            if raw_task[ttp.PROJECT_ID] not in TicktickIds.PROJECT_IDS.values():
+            if raw_task[ttp.PROJECT_ID] not in TicktickIds.VALID_LIST_IDS.values():
                 continue
 
             task = dict()

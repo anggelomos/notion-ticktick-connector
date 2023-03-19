@@ -33,6 +33,8 @@ class TaskSyncer:
 
         self.notion_unsynced_tasks = list(filter(is_task_unsynced, notion_tasks))
         self.ticktick_unsynced_tasks = list(filter(is_task_unsynced, ticktick_tasks))
+        logging.info(f"Unsynced notion tasks: {len(self.notion_unsynced_tasks)}")
+        logging.info(f"Unsynced ticktick tasks: {len(self.ticktick_unsynced_tasks)}")
         return self.notion_unsynced_tasks, self.ticktick_unsynced_tasks
 
     def sync_ticktick_tasks(self):
@@ -184,7 +186,7 @@ class TaskSyncer:
 
     def sync_expenses(self):
         expenses = [task for task in self.ticktick.raw_tasks
-                    if task[ttp.TITLE].startswith("$") and task[ttp.PROJECT_ID] == ttids.PROJECT_IDS["inbox_tasks"]]
+                    if task[ttp.TITLE].startswith("$") and task[ttp.PROJECT_ID] == ttids.VALID_LIST_IDS["inbox_tasks"]]
 
         def parse_expense_title(raw_title: str) -> Tuple[float, str]:
             expense_amount = float(raw_title.split(" ")[0].replace("$", ""))

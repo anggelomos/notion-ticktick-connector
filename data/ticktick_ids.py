@@ -14,7 +14,9 @@ class TicktickIds:
         "63b32f82824afc1fd1e6c891": "learn-language"
     }
 
-    PROJECT_IDS = {
+    PROJECTS_FOLDER_ID = "470149b3aa83c1d125d57f01"
+
+    VALID_LIST_IDS = {
         "inbox_tasks": "inbox114478622",
         "life_kanban": "61c62f198f08c92d0584f678",
         "current_backlog": "61c634f58f08c92d058540ba",
@@ -37,3 +39,7 @@ class TicktickIds:
         "b19e1b221573467baef4378e2dbf0571": "review",
         "e09901cc2b2d4fad99bccfbf539189f8": "done"
     }
+
+    @classmethod
+    def add_valid_lists(cls, lists: dict):
+        cls.VALID_LIST_IDS.update(lists)
