@@ -1,5 +1,6 @@
 import logging
 import datetime
+from collections import OrderedDict
 from typing import List
 
 from config import CHECKINS_START_DATE
@@ -85,27 +86,23 @@ class TicktickController:
             if raw_task[ttp.PROJECT_ID] not in TicktickIds.VALID_LIST_IDS.values():
                 continue
 
-            task = dict()
+            task = OrderedDict()
             task[TaskData.TICKTICK_ID] = raw_task[ttp.ID]
             task[TaskData.NOTION_ID] = None
-            task[TaskData.TITLE] = TaskUtilities.get_task_title(raw_task)
-            task[TaskData.FOCUS_TIME] = TaskUtilities.get_task_focus_time(raw_task)
-
-            task[TaskData.RECURRENT_ID] = ""
-            if ttp.REPEAT_TASK_ID in raw_task:
-                task[TaskData.RECURRENT_ID] = raw_task[ttp.REPEAT_TASK_ID]
 
             task[TaskData.DONE] = self.was_task_completed(task)
             if completed_tasks:
                 task[TaskData.DONE] = True
 
-            task[TaskData.TAGS] = []
+            task[TaskData.TITLE] = TaskUtilities.get_task_title(raw_task)
+
             task[TaskData.POINTS] = 0
             task[TaskData.ENERGY] = 0
+            task[TaskData.TAGS] = ()
             if ttp.TAGS in raw_task:
-                task[TaskData.TAGS] = TaskUtilities.get_task_tags(raw_task)
                 task[TaskData.POINTS] = TaskUtilities.get_task_estimation(raw_task, TaskData.POINTS)
                 task[TaskData.ENERGY] = TaskUtilities.get_task_estimation(raw_task, TaskData.ENERGY)
+                task[TaskData.TAGS] = TaskUtilities.get_task_tags(raw_task)
 
             task[TaskData.DUE_DATE] = ""
             if ttp.DUE_DATE in raw_task:
@@ -115,6 +112,12 @@ class TicktickController:
                 task[TaskData.STATUS] = TicktickIds.COLUMN_TAGS[raw_task[ttp.COLUMN_ID]]
             except KeyError:
                 task[TaskData.STATUS] = ""
+
+            task[TaskData.FOCUS_TIME] = TaskUtilities.get_task_focus_time(raw_task)
+
+            task[TaskData.RECURRENT_ID] = ""
+            if ttp.REPEAT_TASK_ID in raw_task:
+                task[TaskData.RECURRENT_ID] = raw_task[ttp.REPEAT_TASK_ID]
 
             ticktick_tasks.append(task)
 

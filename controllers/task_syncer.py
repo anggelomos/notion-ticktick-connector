@@ -1,5 +1,5 @@
 import logging
-from typing import List, Tuple
+from typing import List, Tuple, Set
 
 from controllers.notion_controller import NotionController
 from controllers.ticktick_controller import TicktickController
@@ -19,15 +19,15 @@ class TaskSyncer:
         self.ticktick_unsynced_tasks = []
 
     def get_unsynced_tasks(self, notion_tasks: List[dict], ticktick_tasks: List[dict]) -> Tuple[List[dict], List[dict]]:
-        notion_tasks_ids = set([(task[TaskData.TICKTICK_ID], task[TaskData.DUE_DATE]) for task in notion_tasks])
-        ticktick_tasks_ids = set([(task[TaskData.TICKTICK_ID], task[TaskData.DUE_DATE]) for task in ticktick_tasks])
+        unique_notion_tasks = set([tuple(list(task.values())[:1] + list(task.values())[2:8] + list(task.values())[9:]) for task in notion_tasks])
+        unique_ticktick_tasks = set([tuple(list(task.values())[:1] + list(task.values())[2:8] + list(task.values())[9:]) for task in ticktick_tasks])
 
-        unsynced_tasks_ids = notion_tasks_ids.symmetric_difference(ticktick_tasks_ids)
+        unsynced_tasks = unique_notion_tasks.symmetric_difference(unique_ticktick_tasks)
 
         def is_task_unsynced(task) -> bool:
-            for unsynced_tasks_id in unsynced_tasks_ids:
-                if task[TaskData.TICKTICK_ID] == unsynced_tasks_id[0] and \
-                        task[TaskData.DUE_DATE] == unsynced_tasks_id[1]:
+            for unsynced_task in unsynced_tasks:
+                if task[TaskData.TICKTICK_ID] == unsynced_task[0] and \
+                        task[TaskData.DUE_DATE] == unsynced_task[6]:
                     return True
             return False
 
@@ -72,9 +72,11 @@ class TaskSyncer:
 
     @staticmethod
     def is_task_recurrent(task: dict) -> bool:
+        logging.info(f"Checking if task is recurrent {task}")
         return task[td.TICKTICK_ID] == task[td.RECURRENT_ID]
 
     def was_notion_task_updated(self, task: dict) -> bool:
+        logging.info(f"Checking if notion task was updated {task}")
         def search_updated_task(ticktick_tasks):
             date_comparison = True
             if task[td.RECURRENT_ID]:
@@ -122,7 +124,14 @@ class TaskSyncer:
                 return not tasks_equal
             return False
 
-        return any(map(condition, self.notion.active_tasks))
+        if any(map(condition, self.notion.active_tasks)):
+            return True
+
+        notion_tasks = self.notion.get_tasks_by_ticktick_id(task[TaskData.TICKTICK_ID])
+        if notion_tasks and any(map(condition, [notion_tasks[0]])):
+            return True
+
+        return False
 
     def was_task_added(self, task: dict) -> bool:
         logging.info(f"Checking if task was new {task}")
@@ -134,6 +143,7 @@ class TaskSyncer:
         return not any(map(condition, self.notion.active_tasks))
 
     def update_recurrent_task(self, task):
+        logging.info(f"Updating recurrent task {task}")
 
         def search_task_id_with_date(ticktick_tasks):
             return task[td.RECURRENT_ID] == ticktick_tasks[td.RECURRENT_ID] and \
@@ -157,10 +167,10 @@ class TaskSyncer:
             found_task = next(filter(search_task_id, self.ticktick.deleted_tasks), None)
 
         if found_task and self.notion.is_task_already_created(found_task[td.TICKTICK_ID], found_task[td.DUE_DATE]):
-            if task[td.DUE_DATE] == found_task[td.DUE_DATE]:
-                self.notion.delete_task(task[td.NOTION_ID])
-            else:
-                self.notion.change_task_state(task[td.NOTION_ID], active=False)
+            # if task[td.DUE_DATE] == found_task[td.DUE_DATE]:
+            #     self.notion.delete_task(task[td.NOTION_ID])
+            # else:
+            #     self.notion.change_task_state(task[td.NOTION_ID], active=False)
             return None
 
         if found_task and found_task[td.TICKTICK_ID] != task[td.TICKTICK_ID]:
@@ -170,10 +180,12 @@ class TaskSyncer:
         return task
 
     def delete_task(self, task: dict):
+        logging.info(f"Deleting task {task}")
         notion_id = self.notion.get_notion_id(task[td.TICKTICK_ID])
         self.notion.delete_task(notion_id)
 
     def abandon_task(self, task: dict):
+        logging.info(f"Abandoning task {task}")
         notion_id = self.notion.get_notion_id(task[td.TICKTICK_ID])
         self.notion.change_task_state(notion_id, active=False)
 

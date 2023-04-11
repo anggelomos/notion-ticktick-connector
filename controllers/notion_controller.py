@@ -29,14 +29,28 @@ class NotionController:
         self.active_tasks = notion_tasks
         return notion_tasks
 
+    def get_tasks_by_ticktick_id(self, ticktick_id: str) -> List[dict]:
+        logging.info(f"Getting tasks with the ticktick id {ticktick_id}")
+
+        payload = NotionPayloads.get_task_by_ticktick_id(ticktick_id, check_date=False)
+        raw_tasks = self.notion_client.query_table(self.tasks_table_id, payload)
+
+        notion_tasks = TaskUtilities.parse_notion_tasks(raw_tasks)
+        return notion_tasks
+
     def get_notion_id(self, ticktick_id: str) -> str:
-        notion_id = list(filter(lambda task: task[td.TICKTICK_ID] == ticktick_id, self.active_tasks))[0][td.NOTION_ID]
-        logging.info(f"Got notion id {notion_id} from ticktick id {ticktick_id}")
-        return notion_id
+        notion_active_tasks = list(filter(lambda task: task[td.TICKTICK_ID] == ticktick_id, self.active_tasks))
+
+        if notion_active_tasks:
+            return notion_active_tasks[0][td.NOTION_ID]
+
+        notion_tasks = self.get_tasks_by_ticktick_id(ticktick_id)
+        return notion_tasks[0][td.NOTION_ID]
+
 
     def is_task_already_created(self, ticktick_id: str, due_date: str) -> bool:
         logging.info(f"Checking if task with ticktick id {ticktick_id} is already created in notion")
-        payload = NotionPayloads.get_task_by_ticktick_id(ticktick_id, due_date)
+        payload = NotionPayloads.get_task_by_ticktick_id(ticktick_id, due_date=due_date)
         raw_tasks = self.notion_client.query_table(self.tasks_table_id, payload)
         return len(raw_tasks) > 0
 

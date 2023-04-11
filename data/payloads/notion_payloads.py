@@ -105,6 +105,9 @@ class NotionPayloads:
         if status:
             payload["properties"][tnp.STATUS] = {"select": {"name": status}}
 
+            if status == "done":
+                payload["properties"][tnp.DONE] = {"checkbox": True}
+
         return json.dumps(payload)
 
     @staticmethod
@@ -189,7 +192,7 @@ class NotionPayloads:
         return json.dumps(payload)
 
     @staticmethod
-    def get_task_by_ticktick_id(ticktick_id: str, due_date: str = None) -> dict:
+    def get_task_by_ticktick_id(ticktick_id: str, check_date: bool = True, due_date: str = None) -> dict:
         filters = [
             {
                 "property": "Ticktick Id",
@@ -199,22 +202,29 @@ class NotionPayloads:
             }
         ]
 
-        if due_date:
-            filters.append({
-                "property": "Due date",
-                "date": {
-                    "equals": due_date
-                }
-            })
-        else:
-            filters.append({
-                "property": "Due date",
-                "date": {
-                    "is_empty": True
-                }
-            })
+        if check_date:
+            if due_date:
+                filters.append({
+                    "property": "Due date",
+                    "date": {
+                        "equals": due_date
+                    }
+                })
+            else:
+                filters.append({
+                    "property": "Due date",
+                    "date": {
+                        "is_empty": True
+                    }
+                })
 
         payload = {
+            "sorts": [
+                {
+                    "property": "Due date",
+                    "direction": "ascending"
+                }
+            ],
             "filter": {
                 "and": filters
             }

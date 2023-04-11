@@ -1,5 +1,6 @@
 import re
-from typing import List
+from collections import OrderedDict
+from typing import List, Tuple, Union
 
 from data.regular_expressions.filter_tags import FilterTagsRegex
 from data.task_data import TaskData
@@ -11,18 +12,26 @@ from data.task_ticktick_parameters import TaskTicktickParameters as ttp
 class TaskUtilities:
 
     @staticmethod
-    def parse_notion_tasks(raw_tasks: List[dict]) -> List[dict]:
+    def parse_notion_tasks(raw_tasks: Union[dict, List[dict]]) -> List[dict]:
         notion_tasks = []
+
+        if not isinstance(raw_tasks, list):
+            raw_tasks = [raw_tasks]
+
         for raw_task in raw_tasks:
             properties = raw_task[tnp.PROPERTIES]
-            task = {}
+            task = OrderedDict()
             task[TaskData.TICKTICK_ID] = properties[tnp.TICKTICK_ID][tnp.RICH_TEXT][0][tnp.PLAIN_TEXT]
             task[TaskData.NOTION_ID] = raw_task[tnp.ID]
             task[TaskData.DONE] = properties[tnp.DONE][tnp.CHECKBOX]
             task[TaskData.TITLE] = properties[tnp.TASK][tnp.TITLE][0][tnp.PLAIN_TEXT]
             task[TaskData.POINTS] = properties[tnp.POINTS][tnp.NUMBER]
             task[TaskData.ENERGY] = properties[tnp.ENERGY][tnp.NUMBER]
-            task[TaskData.FOCUS_TIME] = float(properties[tnp.FOCUS_TIME][tnp.NUMBER])
+
+            try:
+                task[TaskData.TAGS] = tuple(map(lambda tag: tag[tnp.NAME], properties[tnp.TAGS][tnp.MULTI_SELECT]))
+            except KeyError:
+                task[TaskData.TAGS] = ()
 
             try:
                 task[TaskData.DUE_DATE] = properties[tnp.DUE_DATE][tnp.DATE][tnp.START]
@@ -30,14 +39,11 @@ class TaskUtilities:
                 task[TaskData.DUE_DATE] = ""
 
             try:
-                task[TaskData.TAGS] = list(map(lambda tag: tag[tnp.NAME], properties[tnp.TAGS][tnp.MULTI_SELECT]))
-            except KeyError:
-                task[TaskData.TAGS] = []
-
-            try:
                 task[TaskData.STATUS] = properties[tnp.STATUS][tnp.SELECT][tnp.NAME]
             except (KeyError, TypeError):
                 task[TaskData.STATUS] = ""
+
+            task[TaskData.FOCUS_TIME] = float(properties[tnp.FOCUS_TIME][tnp.NUMBER])
 
             try:
                 task[TaskData.RECURRENT_ID] = properties[tnp.RECURRENT_ID][tnp.RICH_TEXT][0][tnp.PLAIN_TEXT]
@@ -87,8 +93,8 @@ class TaskUtilities:
         return focus_time
 
     @classmethod
-    def get_task_tags(cls, raw_task: dict) -> List[str]:
-        raw_tags = raw_task[ttp.TAGS]
+    def get_task_tags(cls, raw_task: dict) -> Tuple[str]:
+        raw_tags: List[str] = raw_task[ttp.TAGS]
         task_tags = []
 
         for raw_tag in raw_tags:
@@ -97,7 +103,7 @@ class TaskUtilities:
             if valid_tag:
                 task_tags.append(raw_tag)
 
-        return task_tags
+        return tuple(task_tags)
 
     @classmethod
     def is_task_valid(cls, task: dict) -> bool:
