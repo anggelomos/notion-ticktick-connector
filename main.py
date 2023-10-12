@@ -1,26 +1,20 @@
 import logging
 import os
-from controllers.notion_controller import NotionController
-from controllers.task_syncer import TaskSyncer
-from controllers.ticktick_controller import TicktickController
+from src.task_syncer import TaskSyncer
+
+from tickthon import TicktickClient
+from nothion import NotionClient
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)")
 
 
 def main():
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)")
-    notion = NotionController(os.getenv('NT_auth'), notion_version='2022-06-28')
-    ticktick = TicktickController(os.getenv('TT_user'), os.getenv('TT_pass'))
+    ticktick = TicktickClient(os.getenv("TT_user"), os.getenv("TT_pass"))
+    notion = NotionClient(os.getenv("NT_auth"))
 
-    notion.get_active_tasks()
-    ticktick.get_tasks()
-
-    habits = ticktick.get_habits()
-    notion.check_habits(habits)
-
-    task_syncer = TaskSyncer(notion, ticktick)
+    task_syncer = TaskSyncer(ticktick, notion)
     task_syncer.sync_expenses()
-    task_syncer.get_unsynced_tasks(notion.active_tasks, ticktick.relevant_tasks)
-    task_syncer.sync_ticktick_tasks()
-    task_syncer.sync_notion_tasks()
+    task_syncer.sync_tasks()
 
 
 if __name__ == "__main__":

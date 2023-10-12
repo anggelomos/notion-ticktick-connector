@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project.urls]
+repository = "https://github.com/anggelomos/notion-ticktick-connector"
+
+[tool.setuptools.package-data]
+nothion = ["py.typed"]
+
+[project]
+name = "notion-ticktick-connector"
+version = "0.1.0"
+description = "Script that uses Notion's api and the unofficial Ticktick api to sync tasks between the two applications."
+readme = "README.md"
+authors = [{name = "anggelomos", email = "anggelomos@outlook.com"}]
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3.10",
+]
+dependencies = [
+    "tickthon",
+    "nothion",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "twine",
+    "flake8",
+    "mypy",
+    "types-requests"
+]
