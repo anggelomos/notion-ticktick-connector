@@ -77,4 +77,4 @@ jobs:
           cd ..
 
       - name: Upload lambda package
-        run: aws lambda update-function-code --function-name ticktick-notion-connector --zip-file fileb://lambda-deployment-package.zip
+        run: aws lambda update-function-code --function-name ticktick-notion-connector --zip-file fileb://lambda-deployment-package.zip --region us-east-1
