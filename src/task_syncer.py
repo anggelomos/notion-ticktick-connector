@@ -12,6 +12,7 @@ class TaskSyncer:
         self._notion = notion
         self._ticktick_tasks: Set[Task] = set(self._ticktick.get_active_tasks())
         self._notion_tasks: Set[Task] = set(self._notion.get_active_tasks())
+        self.deleted_ticktick_tasks = self._ticktick.get_deleted_tasks()
 
     def sync_tasks(self):
         self._get_unsync_tasks()
@@ -50,7 +51,7 @@ class TaskSyncer:
     def sync_notion_tasks(self):
         logging.info("Syncing notion tasks")
         for task in self._notion_unsync_tasks:
-            was_task_deleted = self.search_for_task(task, self._ticktick.deleted_tasks)
+            was_task_deleted = self.search_for_task(task, self.deleted_ticktick_tasks)
             was_task_updated = self.search_for_task(task, self._ticktick_unsync_tasks)
 
             if was_task_deleted:

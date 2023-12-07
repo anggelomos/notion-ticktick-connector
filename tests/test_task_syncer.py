@@ -71,7 +71,7 @@ def test_sync_ticktick_tasks(task_syncer):
 
 
 def test_sync_notion_tasks(task_syncer):
-    task_syncer._ticktick.deleted_tasks.append(TEST_NOTION_TASKS[3])
+    task_syncer.deleted_ticktick_tasks.append(TEST_NOTION_TASKS[3])
     task_syncer._notion.create_task(TEST_NOTION_TASKS[3])
     task_syncer._notion.create_task(TEST_NOTION_TASKS[2])
 
