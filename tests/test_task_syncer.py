@@ -13,12 +13,12 @@ STATIC_NON_SYNCED_TASK = Task(title="Test task", due_date="2099-09-09", ticktick
 TEST_TICKTICK_TASKS = [STATIC_NON_SYNCED_TASK,
                        # Task to update
                        Task(title="Test Existing Task", due_date="9999-09-09", ticktick_id="a7f9b3d2c8e60f1472065ac4",
-                            ticktick_etag="muu17zqq", created_date= "9999-09-09", focus_time=random(),
+                            ticktick_etag="muu17zqq", created_date="9999-09-09", focus_time=random(),
                             tags=("test", "existing"), project_id="4a72b6d8e9f2103c5d6e7f8a9b0c",
                             timezone=timezone, status=2),
                        # Test task to create
                        Task(title="Test Create Task", due_date="2099-09-09", ticktick_id="kj39rudnsakl49fht83ksio5",
-                            ticktick_etag="w8dhr428", created_date="2099-09-09" , focus_time=9.99,
+                            ticktick_etag="w8dhr428", created_date="2099-09-09", focus_time=9.99,
                             tags=("test", "created", "notion"), project_id="jr83utdnsakl49fh8h28dfht",
                             timezone=timezone)
                        ]
@@ -33,7 +33,7 @@ TEST_NOTION_TASKS = [STATIC_NON_SYNCED_TASK,
                           project_id="c3d4e5f6a7b8c9d0e1f2a3b4", timezone=timezone),
                      # Task to delete
                      Task(title="Test Delete Task", due_date="9999-09-09", ticktick_id="d4e5f6a7b8c9d0e1f2a3b4c5",
-                          ticktick_etag="8ru3n28d", created_date="9999-09-09" , focus_time=0, tags=("test", "delete"),
+                          ticktick_etag="8ru3n28d", created_date="9999-09-09", focus_time=0, tags=("test", "delete"),
                           project_id="e5f6a7b8c9d0e1f2a3b4c5d6", timezone=timezone, deleted=1)
                      ]
 
@@ -58,8 +58,11 @@ def test_get_unsync_tasks(task_syncer):
 def test_sync_ticktick_tasks(task_syncer):
     task_syncer.sync_ticktick_tasks()
 
-    created_task = task_syncer._notion.get_task_by_etag("w8dhr428")
-    updated_task = task_syncer._notion.get_task_by_etag("muu17zqq")
+    created_task_search = Task(ticktick_etag="w8dhr428", created_date="", title="", ticktick_id="")
+    updated_task_search = Task(ticktick_etag="muu17zqq", created_date="", title="", ticktick_id="")
+
+    created_task = task_syncer._notion.get_notion_task(created_task_search)
+    updated_task = task_syncer._notion.get_notion_task(updated_task_search)
 
     assert created_task == TEST_TICKTICK_TASKS[2]
     assert updated_task == TEST_TICKTICK_TASKS[1]
@@ -74,7 +77,8 @@ def test_sync_notion_tasks(task_syncer):
 
     task_syncer.sync_notion_tasks()
 
-    completed_task = task_syncer._notion.get_task_by_etag("5hu47d83")
+    completed_task_search = Task(ticktick_etag="5hu47d83", created_date="", title="", ticktick_id="")
+    completed_task = task_syncer._notion.get_notion_task(completed_task_search)
     assert completed_task.status == 2
     assert task_syncer._notion.is_task_already_created(TEST_NOTION_TASKS[3]) is False
 
@@ -85,8 +89,8 @@ def test_sync_expenses(task_syncer):
     task_syncer._ticktick.expense_logs.append((Task(title="$9.9 Test product", due_date="9999-09-09",
                                                     ticktick_id="a7b8c9d0e1f2a3b4c5d6e7f8", created_date="9999-09-09",
                                                     ticktick_etag="a9b0c1d2"),
-                                              ExpenseLog(date="9999-09-09", expense=9.9,
-                                                         product="Test product integration tests notion-ticktick")))
+                                               ExpenseLog(date="9999-09-09", expense=9.9,
+                                                          product="Test product integration tests notion-ticktick")))
 
     expenses_synced = task_syncer.sync_expenses()
 
