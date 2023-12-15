@@ -9,32 +9,35 @@ from task_syncer import TaskSyncer
 timezone = "America/Bogota"
 STATIC_NON_SYNCED_TASK = Task(title="Test task", due_date="2099-09-09", ticktick_id="test-id",
                               ticktick_etag="test-etag", created_date="2099-09-09", focus_time=9.99,
-                              tags=("test", "integration", "notion"), project_id="inbox114478622", timezone=timezone)
+                              tags=("test", "integration", "notion", "notes"), project_id="inbox114478622",
+                              timezone=timezone)
 TEST_TICKTICK_TASKS = [STATIC_NON_SYNCED_TASK,
                        # Task to update
                        Task(title="Test Existing Task", due_date="9999-09-09", ticktick_id="a7f9b3d2c8e60f1472065ac4",
                             ticktick_etag="muu17zqq", created_date="9999-09-09", focus_time=random(),
-                            tags=("test", "existing"), project_id="4a72b6d8e9f2103c5d6e7f8a9b0c",
+                            tags=("test", "existing", "notes"), project_id="4a72b6d8e9f2103c5d6e7f8a9b0c",
                             timezone=timezone, status=2),
                        # Test task to create
                        Task(title="Test Create Task", due_date="2099-09-09", ticktick_id="kj39rudnsakl49fht83ksio5",
                             ticktick_etag="w8dhr428", created_date="2099-09-09", focus_time=9.99,
-                            tags=("test", "created", "notion"), project_id="jr83utdnsakl49fh8h28dfht",
+                            tags=("test", "created", "notion", "notes"), project_id="jr83utdnsakl49fh8h28dfht",
                             timezone=timezone)
                        ]
 TEST_NOTION_TASKS = [STATIC_NON_SYNCED_TASK,
                      # Task to update
                      Task(title="Test Existing Task", due_date="9999-09-09", ticktick_id="a7f9b3d2c8e60f1472065ac4",
                           ticktick_etag="muu17zqq", created_date="9999-09-09", focus_time=9.99,
-                          tags=("test", "existing"), project_id="4a72b6d8e9f2103c5d6e7f8a9b0c", timezone=timezone),
+                          tags=("test", "existing", "notes"), project_id="4a72b6d8e9f2103c5d6e7f8a9b0c",
+                          timezone=timezone),
                      # Task to complete
                      Task(title="Test Complete Task", due_date="9999-09-09", ticktick_id="b2c3d4e5f6a7b8c9d0e1f2a3",
-                          ticktick_etag="5hu47d83", created_date="9999-09-09", focus_time=0, tags=("test", "complete"),
-                          project_id="c3d4e5f6a7b8c9d0e1f2a3b4", timezone=timezone),
+                          ticktick_etag="5hu47d83", created_date="9999-09-09", focus_time=0,
+                          tags=("test", "complete", "notes"), project_id="c3d4e5f6a7b8c9d0e1f2a3b4", timezone=timezone),
                      # Task to delete
                      Task(title="Test Delete Task", due_date="9999-09-09", ticktick_id="d4e5f6a7b8c9d0e1f2a3b4c5",
-                          ticktick_etag="8ru3n28d", created_date="9999-09-09", focus_time=0, tags=("test", "delete"),
-                          project_id="e5f6a7b8c9d0e1f2a3b4c5d6", timezone=timezone, deleted=1)
+                          ticktick_etag="8ru3n28d", created_date="9999-09-09", focus_time=0,
+                          tags=("test", "delete", "notes"), project_id="e5f6a7b8c9d0e1f2a3b4c5d6",
+                          timezone=timezone, deleted=1)
                      ]
 
 
@@ -58,8 +61,8 @@ def test_get_unsync_tasks(task_syncer):
 def test_sync_ticktick_tasks(task_syncer):
     task_syncer.sync_ticktick_tasks()
 
-    created_task_search = Task(ticktick_etag="w8dhr428", created_date="", title="", ticktick_id="")
-    updated_task_search = Task(ticktick_etag="muu17zqq", created_date="", title="", ticktick_id="")
+    created_task_search = Task(ticktick_etag="w8dhr428", created_date="", title="", ticktick_id="", tags=tuple("notes"))
+    updated_task_search = Task(ticktick_etag="muu17zqq", created_date="", title="", ticktick_id="", tags=tuple("notes"))
 
     created_task = task_syncer._notion.get_notion_task(created_task_search)
     updated_task = task_syncer._notion.get_notion_task(updated_task_search)
@@ -68,6 +71,7 @@ def test_sync_ticktick_tasks(task_syncer):
     assert updated_task == TEST_TICKTICK_TASKS[1]
 
     task_syncer._notion.delete_task(created_task)
+    task_syncer._notion.delete_task_note(created_task)
 
 
 def test_sync_notion_tasks(task_syncer):

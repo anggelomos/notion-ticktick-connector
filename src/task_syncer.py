@@ -36,14 +36,34 @@ class TaskSyncer:
         self._notion_unsync_tasks = set([notion_etags_dict[etag] for etag in notion_clean_etags] +
                                         [notion_ids_dict[task_id] for task_id in notion_clean_ids])
 
+    def create_notion_tasks(self, task: Task):
+        self._notion.create_task(task)
+        if self.is_task_note(task):
+            self._notion.create_task_note(task)
+
+    def update_notion_tasks(self, task: Task):
+        self._notion.update_task(task)
+        if self.is_task_note(task):
+            self._notion.update_task_note(task)
+
+    def delete_notion_tasks(self, task: Task):
+        self._notion.delete_task(task)
+        if self.is_task_note(task):
+            self._notion.delete_task_note(task)
+
+    def complete_notion_tasks(self, task: Task):
+        self._notion.complete_task(task)
+        if self.is_task_note(task):
+            self._notion.complete_task_note(task)
+
     def sync_ticktick_tasks(self):
         logging.info(f"Syncing ticktick tasks: {self._ticktick_unsync_tasks}")
         for task in self._ticktick_unsync_tasks:
             notion_task = self.search_for_task(task, self._notion_tasks)
             if notion_task is None:
-                self._notion.create_task(task)
+                self.create_notion_tasks(task)
             elif task != notion_task:
-                self._notion.update_task(task)
+                self.update_notion_tasks(task)
             else:
                 logging.warning(f"TICKTICK TASK {task.ticktick_id} WITH ETAG {task.ticktick_etag} "
                                 f"WAS NOT SYNCED")
@@ -55,11 +75,15 @@ class TaskSyncer:
             was_task_updated = self.search_for_task(task, self._ticktick_unsync_tasks)
 
             if was_task_deleted:
-                self._notion.delete_task(task)
+                self.delete_notion_tasks(task)
             elif was_task_updated:
                 continue
             else:
-                self._notion.complete_task(task)
+                self.complete_notion_tasks(task)
+
+    @staticmethod
+    def is_task_note(tasks: Task) -> bool:
+        return "notes" in tasks.tags
 
     @staticmethod
     def search_for_task(search_task: Task, tasks: Iterable[Task]) -> Optional[Task]:
