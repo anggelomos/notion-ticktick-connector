@@ -20,7 +20,7 @@ class TaskSyncer:
         self.sync_notion_tasks()
 
     def _get_unsync_tasks(self):
-        logging.info("Getting unsync tasks")
+        logging.info("Getting unsync tasks.")
         ticktick_base_unsync_tasks = self._ticktick_tasks - self._notion_tasks
         notion_base_unsync_tasks = self._notion_tasks - self._ticktick_tasks
 
