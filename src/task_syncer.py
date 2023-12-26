@@ -44,7 +44,10 @@ class TaskSyncer:
     def update_notion_tasks(self, task: Task):
         self._notion.update_task(task)
         if self.is_task_note(task):
-            self._notion.update_task_note(task)
+            if not self._notion.is_task_note_already_created(task):
+                self._notion.create_task_note(task)
+            else:
+                self._notion.update_task_note(task)
 
     def delete_notion_tasks(self, task: Task):
         self._notion.delete_task(task)
