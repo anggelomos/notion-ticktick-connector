@@ -19,6 +19,24 @@ class TaskSyncer:
         self.sync_ticktick_tasks()
         self.sync_notion_tasks()
 
+    def sync_expenses(self) -> List[dict]:
+        expenses_synced = []
+        for expense_task, expense_log in self._ticktick.get_expense_logs():
+            expenses_synced.append(self._notion.add_expense_log(expense_log))
+            self._ticktick.complete_task(expense_task)
+        return expenses_synced
+
+    def sync_highlights(self) -> List[dict]:
+        highlights_synced = []
+        for log in self._ticktick.get_day_logs():
+            highlight_create = None
+            if "highlight" in log.tags:
+                highlight_create = self._notion.add_highlight_log(log)
+
+            if highlight_create:
+                highlights_synced.append(highlight_create)
+        return highlights_synced
+
     def _get_unsync_tasks(self):
         logging.info("Getting unsync tasks.")
         ticktick_base_unsync_tasks = self._ticktick_tasks - self._notion_tasks
@@ -95,10 +113,3 @@ class TaskSyncer:
             if task.ticktick_etag == search_task.ticktick_etag or task.ticktick_id == search_task.ticktick_id:
                 return task
         return None
-
-    def sync_expenses(self) -> List[dict]:
-        expenses_synced = []
-        for expense_task, expense_log in self._ticktick.get_expense_logs():
-            expenses_synced.append(self._notion.add_expense_log(expense_log))
-            self._ticktick.complete_task(expense_task)
-        return expenses_synced

@@ -1,6 +1,8 @@
+from datetime import datetime
 from random import random
 
 import pytest
+from dateutil.tz import tz
 from nothion._notion_payloads import NotionPayloads
 from tickthon import Task, ExpenseLog
 
@@ -41,7 +43,7 @@ TEST_NOTION_TASKS = [STATIC_NON_SYNCED_TASK,
                      ]
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture()
 def task_syncer(ticktick_client, notion_client):
     task_syncer = TaskSyncer(ticktick_client, notion_client)
     task_syncer._ticktick_tasks = set(TEST_TICKTICK_TASKS)
@@ -104,3 +106,20 @@ def test_sync_expenses(task_syncer):
 
     task_syncer._notion.notion_api.get_table_entry(test_expense["id"])
     task_syncer._notion.notion_api.update_table_entry(test_expense["id"], NotionPayloads.delete_table_entry())
+
+
+def test_sync_highlights(task_syncer):
+    task_syncer._ticktick.all_day_logs.append((Task(title="Tested highlight syncer", due_date="9999-09-09",
+                                                    ticktick_id="726db85349f01aec349fdb83",
+                                                    created_date=datetime.now(tz.gettz("America/New_York")).isoformat(),
+                                                    ticktick_etag="3c02ab1d", tags=("highlight",),
+                                                    timezone="America/New_York")))
+
+    highlights_synced = task_syncer.sync_highlights()
+
+    test_expense = [highlight for highlight in highlights_synced if
+                    highlight['properties']['Note']['title'][0]['plain_text'] == "Tested highlight syncer"]
+
+    assert len(test_expense) == 1
+    task_syncer._notion.notion_api.get_table_entry(test_expense[0]["id"])
+    task_syncer._notion.notion_api.update_table_entry(test_expense[0]["id"], NotionPayloads.delete_table_entry())

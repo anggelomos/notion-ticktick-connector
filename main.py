@@ -14,6 +14,7 @@ def main():
 
     task_syncer = TaskSyncer(ticktick, notion)
     task_syncer.sync_expenses()
+    task_syncer.sync_highlights()
     task_syncer.sync_tasks()
 
 
