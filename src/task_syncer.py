@@ -3,6 +3,8 @@ from typing import Set, Optional, Iterable, List
 
 from nothion import NotionClient
 from tickthon import Task, TicktickClient
+from tickthon._config import get_ticktick_ids
+from tickthon.data.ticktick_id_keys import TicktickIdKeys as tik, TicktickFolderKeys as tfK
 
 
 class TaskSyncer:
@@ -113,3 +115,19 @@ class TaskSyncer:
             if task.ticktick_etag == search_task.ticktick_etag or task.ticktick_id == search_task.ticktick_id:
                 return task
         return None
+
+    def add_work_task_tag(self):
+        work_task_list_id = get_ticktick_ids()[tik.LIST_IDS.value][tfK.WORK_TASKS.value]
+        work_reminders_list_id = get_ticktick_ids()[tik.LIST_IDS.value][tfK.WORK_REMINDERS.value]
+        work_tasks = [task for task in self._ticktick_tasks if
+                      task.project_id in [work_task_list_id, work_reminders_list_id]]
+
+        for task in work_tasks:
+            if "work" not in task.tags:
+                add_tags = list(task.tags)
+
+                if "task-active" in add_tags:
+                    add_tags.remove("task-active")
+
+                add_tags.append("work")
+                self._ticktick.replace_task_tags(task, tuple(add_tags))
