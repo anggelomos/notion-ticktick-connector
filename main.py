@@ -16,7 +16,7 @@ def main():
     task_syncer.sync_expenses()
     task_syncer.sync_highlights()
     task_syncer.sync_tasks()
-    task_syncer.add_work_task_tag()
+    # task_syncer.add_work_task_tag()
 
 
 if __name__ == "__main__":
