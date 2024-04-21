@@ -123,11 +123,11 @@ class TaskSyncer:
                       task.project_id in [work_task_list_id, work_reminders_list_id]]
 
         for task in work_tasks:
-            if "work" not in task.tags:
+            if "work-task" not in task.tags:
                 add_tags = list(task.tags)
 
                 if "task-active" in add_tags:
                     add_tags.remove("task-active")
 
-                add_tags.append("work")
+                add_tags.append("work-task")
                 self._ticktick.replace_task_tags(task, tuple(add_tags))
