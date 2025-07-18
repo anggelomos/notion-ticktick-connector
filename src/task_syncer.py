@@ -74,20 +74,3 @@ class TaskSyncer:
             if task.title == search_task.title:
                 return task
         return None
-
-    def add_work_task_tag(self):
-        # TODO: Remove this function once the changes are completed.
-        work_task_list_id = self._ticktick.ticktick_list_ids.WORK_TASKS
-        work_reminders_list_id = self._ticktick.ticktick_list_ids.WORK_REMINDERS
-        work_tasks = [task for task in self._ticktick_tasks if
-                      task.project_id in [work_task_list_id, work_reminders_list_id]]
-
-        for task in work_tasks:
-            if "work-task" not in task.tags:
-                add_tags = list(task.tags)
-
-                if "task-active" in add_tags:
-                    add_tags.remove("task-active")
-
-                add_tags.append("work-task")
-                self._ticktick.replace_task_tags(task, tuple(add_tags))
