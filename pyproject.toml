@@ -21,13 +21,13 @@ classifiers = [
 dependencies = [
     "tickthon",
     "nothion",
+    "python-dotenv (>=1.1.1,<2.0.0)",
 ]
 
 [tool.poetry]
 package-mode = false
 
 [tool.poetry.group.dev.dependencies]
-python-dotenv = "^1.1.1"
 pytest = "^8.4.1"
 pytest-cov = "^6.2.1"
 flake8 = "^7.3.0"

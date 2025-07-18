@@ -1,13 +1,14 @@
 import logging
 import os
-from dotenv import load_dotenv
 from src.task_syncer import TaskSyncer
 
 from tickthon import TicktickClient, TicktickListIds
 from nothion import NotionClient
 
-# Load environment variables from .env file
-load_dotenv()
+# Load environment variables from .env file only in development
+if os.getenv("ENVIRONMENT") == "dev" or os.path.exists(".env"):
+    from dotenv import load_dotenv
+    load_dotenv()
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)")
 
