@@ -10,7 +10,7 @@ nothion = ["py.typed"]
 
 [project]
 name = "notion-ticktick-connector"
-version = "0.2.0"
+version = "0.3.0"
 description = "Script that uses Notion's api and the unofficial Ticktick api to sync tasks between the two applications."
 readme = "README.md"
 authors = [{name = "anggelomos", email = "anggelomos@outlook.com"}]
@@ -19,16 +19,19 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
 ]
 dependencies = [
-    "tickthon>=0.2.8",
+    "tickthon",
     "nothion",
 ]
 
-[project.optional-dependencies]
-dev = [
-    "pytest",
-    "pytest-cov",
-    "twine",
-    "flake8",
-    "mypy",
-    "types-requests"
-]
+[tool.poetry]
+package-mode = false
+
+[tool.poetry.group.dev.dependencies]
+python-dotenv = "^1.1.1"
+pytest = "^8.4.1"
+pytest-cov = "^6.2.1"
+flake8 = "^7.3.0"
+ruff = "^0.12.2"
+mypy = "^1.16.1"
+types-requests = "^2.32.4.20250611"
+flake8-todos = "^0.3.1"
